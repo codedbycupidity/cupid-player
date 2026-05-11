@@ -1,6 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import playlist from './playlist';
 
+/**
+ * Local audio player hook (HTML5 Audio).
+ *
+ * When used directly, plays from the local playlist.
+ * The App component chooses between this and useSpotifyPlayer
+ * based on the active source.
+ */
 export default function useAudioPlayer() {
   const audioRef = useRef(new Audio());
   const [trackIndex, setTrackIndex] = useState(0);
