@@ -107,6 +107,28 @@ function createWindow() {
     ipcMain.removeListener('window-resize', onResize);
   });
 
+  // Handle Spotify OAuth callback redirect.
+  // When the user logs in, Spotify redirects to http://localhost:5173/callback?code=...
+  // In production (file:// protocol), the OAuth flow opens in the default browser,
+  // and we intercept the redirect via a custom protocol handler.
+  win.webContents.on('will-navigate', (event, url) => {
+    try {
+      const parsed = new URL(url);
+      // If navigating to our redirect URI, let it through in dev mode
+      // (Vite will serve the same SPA). In production, reload with the code.
+      if (parsed.pathname === '/callback' && parsed.searchParams.has('code')) {
+        if (!isDev) {
+          event.preventDefault();
+          // Load the index.html with the callback query string
+          const callbackUrl = `file://${path.join(__dirname, '..', 'dist', 'index.html')}${parsed.search}`;
+          win.loadURL(callbackUrl);
+        }
+      }
+    } catch {
+      // ignore invalid URLs
+    }
+  });
+
   if (isDev) {
     win.loadURL('http://localhost:5173');
     win.webContents.openDevTools({ mode: 'detach' });
