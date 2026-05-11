@@ -83,6 +83,111 @@
   top: calc((48 - 23) / 306 * 100vw);
 }
 
+/* Playback control click targets */
+.btn-prev {
+  left: calc((167 - 110) / 306 * 100vw);
+  top: calc((418 - 23) / 306 * 100vw);
+  width: calc(42 / 306 * 100vw);
+  height: calc(31 / 306 * 100vw);
+}
+
+.btn-play {
+  left: calc((239 - 110) / 306 * 100vw);
+  top: calc((418 - 23) / 306 * 100vw);
+  width: calc(43 / 306 * 100vw);
+  height: calc(31 / 306 * 100vw);
+}
+
+.btn-next {
+  left: calc((312 - 110) / 306 * 100vw);
+  top: calc((418 - 23) / 306 * 100vw);
+  width: calc(42 / 306 * 100vw);
+  height: calc(31 / 306 * 100vw);
+}
+
+/* Now playing section — album art + text */
+.now-playing {
+  position: absolute;
+  left: calc((195 - 110) / 306 * 100vw);
+  top: calc((355 - 23) / 306 * 100vw);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.album-frame-layer {
+  left: calc(-35.95vw + 24 / 306 * 100vw);
+  top: calc(-23 / 306 * 100vw + 3 / 306 * 100vw);
+  z-index: 45;
+}
+
+.album-mask {
+  position: absolute;
+  left: calc((146 - 110) / 306 * 100vw);
+  top: calc((356 - 23) / 306 * 100vw);
+  width: calc(42 / 306 * 100vw);
+  height: calc(42 / 306 * 100vw);
+  clip-path: url(#album-mask);
+  overflow: hidden;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.album-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.track-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.now-playing-label {
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(12 / 306 * 100vw);
+  color: #8a6a7a;
+}
+
+.track-title {
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(24 / 306 * 100vw);
+  color: #5a3a4a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(200 / 306 * 100vw);
+}
+
+.track-artist {
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(14 / 306 * 100vw);
+  color: #8a6a7a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(200 / 306 * 100vw);
+}
+
+/* Time display — elapsed left, remaining right */
+.time-display {
+  position: absolute;
+  left: calc((136 - 110) / 306 * 100vw);
+  top: calc((479 - 23) / 306 * 100vw);
+  width: calc((382 - 136) / 306 * 100vw);
+  display: flex;
+  justify-content: space-between;
+  z-index: 50;
+  pointer-events: none;
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(12 / 306 * 100vw);
+  color: #5a3a4a;
+}
+
 .resize-handle.top-left {
   top: calc(7 / 306 * 100vw); /* at frame border, not bow */
   left: 0;
