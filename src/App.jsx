@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import './App.css';
 
 import frame from '../assets/frame.png';
@@ -13,9 +13,40 @@ import exitButton from '../assets/exit_button.png';
 import minimizerButton from '../assets/minimizer_button.png';
 import windowButton from '../assets/window_button.png';
 
+function useResize(corner) {
+  const onMouseDown = useCallback((e) => {
+    e.preventDefault();
+    let lastX = e.screenX;
+    let lastY = e.screenY;
+
+    const onMouseMove = (e) => {
+      const dx = e.screenX - lastX;
+      const dy = e.screenY - lastY;
+      lastX = e.screenX;
+      lastY = e.screenY;
+      window.cupid?.resize({ dx, dy, corner });
+    };
+
+    const onMouseUp = () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  }, [corner]);
+
+  return onMouseDown;
+}
+
 export default function App() {
   const [track, setTrack] = useState(null);
   const [progress, setProgress] = useState(0);
+
+  const resizeTL = useResize('top-left');
+  const resizeTR = useResize('top-right');
+  const resizeBL = useResize('bottom-left');
+  const resizeBR = useResize('bottom-right');
 
   return (
     <div className="player">
@@ -75,6 +106,12 @@ export default function App() {
 
       {/* Drag region for moving the window */}
       <div className="drag-region" />
+
+      {/* Custom resize handles at frame corners */}
+      <div className="resize-handle top-left" onMouseDown={resizeTL} />
+      <div className="resize-handle top-right" onMouseDown={resizeTR} />
+      <div className="resize-handle bottom-left" onMouseDown={resizeBL} />
+      <div className="resize-handle bottom-right" onMouseDown={resizeBR} />
     </div>
   );
 }
