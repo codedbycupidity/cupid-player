@@ -6,12 +6,15 @@
  */
 
 const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
-const REDIRECT_URI = 'http://localhost:5173/callback';
+const REDIRECT_URI = 'http://127.0.0.1:5173/callback';
 const SCOPES = [
   'streaming',
   'user-read-email',
   'user-read-private',
+  'user-read-playback-state',
   'user-modify-playback-state',
+  'playlist-read-private',
+  'playlist-read-collaborative',
 ];
 
 const TOKEN_KEY = 'spotify_token';
@@ -65,7 +68,15 @@ export async function login() {
     code_challenge: challenge,
   });
 
-  window.location.href = `https://accounts.spotify.com/authorize?${params}`;
+  const authUrl = `https://accounts.spotify.com/authorize?${params}`;
+
+  // In Electron, openExternal opens a modal auth window (not the system browser)
+  // so the OAuth callback stays within the app's session.
+  if (window.cupid?.openExternal) {
+    window.cupid.openExternal(authUrl);
+  } else {
+    window.location.href = authUrl;
+  }
 }
 
 /**
@@ -74,6 +85,8 @@ export async function login() {
  *
  * @returns {string} access token
  */
+let _callbackInFlight = false;
+
 export async function handleCallback() {
   const params = new URLSearchParams(window.location.search);
   const code = params.get('code');
@@ -85,8 +98,13 @@ export async function handleCallback() {
 
   if (!code) return null;
 
+  // Guard against React StrictMode double-invoking the effect
+  if (_callbackInFlight) return null;
+  _callbackInFlight = true;
+
   const verifier = localStorage.getItem(CODE_VERIFIER_KEY);
   if (!verifier) {
+    _callbackInFlight = false;
     throw new Error('Missing PKCE code verifier — did the login flow start from this browser?');
   }
 
