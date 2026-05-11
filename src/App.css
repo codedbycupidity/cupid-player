@@ -1,28 +1,33 @@
-.app {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+.player {
+  position: relative;
+  width: 526px;
+  height: 526px;
+  transform: scale(2);
+  transform-origin: top left;
 }
 
-.app-header {
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+.layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 526px;
+  height: 526px;
+  image-rendering: pixelated;
+  pointer-events: none;
+  user-select: none;
 }
 
-.app-header h1 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+.layer.clickable {
+  pointer-events: auto;
+  cursor: pointer;
 }
 
-.app-main {
-  flex: 1;
-  display: grid;
-  place-items: center;
-  padding: 2rem;
-}
-
-.empty {
-  opacity: 0.6;
+/* Invisible drag region for moving the frameless window */
+.drag-region {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 60px; /* leave space for window buttons */
+  height: 30px;
+  -webkit-app-region: drag;
 }
