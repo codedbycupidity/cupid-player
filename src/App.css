@@ -1,17 +1,16 @@
 .player {
   position: relative;
-  width: 526px;
-  height: 526px;
-  transform: scale(2);
-  transform-origin: top left;
+  width: 612px;
+  height: 974px;
+  overflow: hidden;
 }
 
 .layer {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 526px;
-  height: 526px;
+  top: -60px;
+  left: -220px;
+  width: 1052px;
+  height: 1052px;
   image-rendering: pixelated;
   pointer-events: none;
   user-select: none;
@@ -27,7 +26,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  right: 60px; /* leave space for window buttons */
-  height: 30px;
+  right: 100px; /* leave space for window buttons */
+  height: 40px;
   -webkit-app-region: drag;
 }

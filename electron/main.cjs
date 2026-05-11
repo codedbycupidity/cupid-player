@@ -3,10 +3,12 @@ const path = require('node:path');
 
 const isDev = process.env.NODE_ENV === 'development';
 
-// Scale factor for 526x526 pixel art
+// Scale factor for pixel art
+// Actual drawing area within 526x526 canvas: 306x487
+// (30px top, 110px left, 110px right, 9px bottom padding)
 const SCALE = 2;
-const WIDTH = 526 * SCALE;
-const HEIGHT = 526 * SCALE;
+const WIDTH = 306 * SCALE;
+const HEIGHT = 487 * SCALE;
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -36,8 +38,9 @@ function createWindow() {
   ipcMain.on('window-close', () => win.close());
 
   if (isDev) {
-    win.loadURL('http://localhost:5173');
-    win.webContents.openDevTools({ mode: 'detach' });
+   win.loadURL('http://localhost:5173');
+   win.webContents.openDevTools({ mode:'detach'
+   });
   } else {
     win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
   }
