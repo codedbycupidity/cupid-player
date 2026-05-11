@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('node:path');
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -30,12 +30,27 @@ function createWindow() {
   win.setAspectRatio(ASPECT);
 
   // Window control handlers
+  let preMaxBounds = null;
+
   const onMinimize = () => win.minimize();
   const onMaximize = () => {
-    if (win.isMaximized()) {
-      win.unmaximize();
+    if (preMaxBounds) {
+      // Restore to previous size
+      win.setBounds(preMaxBounds);
+      preMaxBounds = null;
     } else {
-      win.maximize();
+      // Fit to screen while maintaining aspect ratio
+      preMaxBounds = win.getBounds();
+      const { workArea } = screen.getPrimaryDisplay();
+      let newWidth = workArea.width;
+      let newHeight = Math.round(newWidth / ASPECT);
+      if (newHeight > workArea.height) {
+        newHeight = workArea.height;
+        newWidth = Math.round(newHeight * ASPECT);
+      }
+      const x = workArea.x + Math.round((workArea.width - newWidth) / 2);
+      const y = workArea.y + Math.round((workArea.height - newHeight) / 2);
+      win.setBounds({ x, y, width: newWidth, height: newHeight });
     }
   };
   const onClose = () => win.close();
