@@ -11,6 +11,8 @@ Thumbs.db
 .env.*.local
 .env.local
 
+audio/
+
 *.log
 npm-debug.log*
 
