@@ -1,22 +1,39 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('node:path');
 
 const isDev = process.env.NODE_ENV === 'development';
 
+// Scale factor for 526x526 pixel art
+const SCALE = 2;
+const WIDTH = 526 * SCALE;
+const HEIGHT = 526 * SCALE;
+
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1100,
-    height: 720,
-    minWidth: 720,
-    minHeight: 480,
-    backgroundColor: '#14101a',
-    titleBarStyle: 'hiddenInset',
+    width: WIDTH,
+    height: HEIGHT,
+    resizable: false,
+    frame: false,
+    transparent: true,
+    backgroundColor: '#00000000',
+    hasShadow: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
     },
   });
+
+  // Window control handlers
+  ipcMain.on('window-minimize', () => win.minimize());
+  ipcMain.on('window-maximize', () => {
+    if (win.isMaximized()) {
+      win.unmaximize();
+    } else {
+      win.maximize();
+    }
+  });
+  ipcMain.on('window-close', () => win.close());
 
   if (isDev) {
     win.loadURL('http://localhost:5173');
