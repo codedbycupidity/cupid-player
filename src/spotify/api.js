@@ -57,35 +57,33 @@ export async function fetchPlaylistTracks(playlistId) {
   const token = await getAccessToken();
   if (!token) throw new Error('Not authenticated with Spotify');
 
+  const res = await fetch(`${API_BASE}/playlists/${playlistId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Spotify API error ${res.status}: ${text}`);
+  }
+
+  const data = await res.json();
   const tracks = [];
-  let url = `${API_BASE}/playlists/${playlistId}/tracks?fields=items(track(name,artists,album(images),uri)),next&limit=100`;
 
-  while (url) {
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
+  // The full playlist response nests tracks under `items` or `tracks`
+  const container = data.tracks || data.items;
+  const items = container?.items || [];
+
+  for (const entry of items) {
+    // Track data may be under `track` or `item` depending on API version
+    const t = entry.track || entry.item;
+    if (!t || !t.uri) continue;
+
+    tracks.push({
+      title: t.name,
+      artist: t.artists.map((a) => a.name).join(', '),
+      art: t.album?.images?.[0]?.url ?? null,
+      uri: t.uri,
     });
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Spotify API error ${res.status}: ${text}`);
-    }
-
-    const data = await res.json();
-
-    for (const item of data.items) {
-      const t = item.track;
-      // Tracks can be null (e.g. local files or removed tracks)
-      if (!t || !t.uri) continue;
-
-      tracks.push({
-        title: t.name,
-        artist: t.artists.map((a) => a.name).join(', '),
-        art: t.album.images?.[0]?.url ?? null,
-        uri: t.uri,
-      });
-    }
-
-    url = data.next || null;
   }
 
   return tracks;
