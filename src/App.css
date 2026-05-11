@@ -51,6 +51,38 @@
   pointer-events: auto;
 }
 
+/* Window control click targets — positioned over the button icons */
+/* Positions relative to 306-wide visible frame: (canvasX - 110) / 306 */
+/* Y relative to 497-tall visible frame: (canvasY - 23) / 497 */
+.btn {
+  position: absolute;
+  width: calc(20 / 306 * 100vw);
+  height: calc(21 / 306 * 100vw);
+  z-index: 150;
+  cursor: pointer;
+  border-radius: calc(4 / 306 * 100vw);
+  -webkit-app-region: no-drag;
+}
+
+.btn-minimize {
+
+  left: calc((331 - 110) / 306 * 100vw);
+  top: calc((48 - 23) / 306 * 100vw);
+}
+
+.btn-window {
+
+  left: calc((355 - 110) / 306 * 100vw);
+  top: calc((48 - 23) / 306 * 100vw);
+  width: calc(19 / 306 * 100vw);
+}
+
+.btn-exit {
+
+  left: calc((378 - 110) / 306 * 100vw);
+  top: calc((48 - 23) / 306 * 100vw);
+}
+
 .resize-handle.top-left {
   top: calc(7 / 306 * 100vw); /* at frame border, not bow */
   left: 0;

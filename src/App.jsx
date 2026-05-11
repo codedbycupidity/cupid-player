@@ -81,28 +81,10 @@ export default function App() {
         draggable={false}
       />
 
-      {/* Window controls */}
-      <img
-        src={minimizerButton}
-        className="layer clickable"
-        alt="Minimize"
-        draggable={false}
-        onClick={() => window.cupid?.minimize()}
-      />
-      <img
-        src={windowButton}
-        className="layer clickable"
-        alt="Maximize"
-        draggable={false}
-        onClick={() => window.cupid?.maximize()}
-      />
-      <img
-        src={exitButton}
-        className="layer clickable"
-        alt="Close"
-        draggable={false}
-        onClick={() => window.cupid?.close()}
-      />
+      {/* Window control layers (visual only) */}
+      <img src={minimizerButton} className="layer" alt="" draggable={false} />
+      <img src={windowButton} className="layer" alt="" draggable={false} />
+      <img src={exitButton} className="layer" alt="" draggable={false} />
 
       {/* Drag region for moving the window */}
       <div className="drag-region" />
@@ -112,6 +94,11 @@ export default function App() {
       <div className="resize-handle top-right" onMouseDown={resizeTR} />
       <div className="resize-handle bottom-left" onMouseDown={resizeBL} />
       <div className="resize-handle bottom-right" onMouseDown={resizeBR} />
+
+      {/* Window control click targets — last so they sit on top of drag region */}
+      <div className="btn btn-minimize" onClick={() => window.cupid?.minimize()} />
+      <div className="btn btn-window" onClick={() => window.cupid?.maximize()} />
+      <div className="btn btn-exit" onClick={() => window.cupid?.close()} />
     </div>
   );
 }
