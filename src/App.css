@@ -220,18 +220,19 @@
 
 /* Small toggle button positioned near the window controls */
 .btn-spotify-toggle {
-  left: calc((305 - 110) / 306 * 100vw);
+  left: calc((307 - 110) / 306 * 100vw);
   top: calc((48 - 23) / 306 * 100vw);
   width: calc(20 / 306 * 100vw);
-  height: calc(21 / 306 * 100vw);
-  z-index: 160;
-  opacity: 0.5;
+  height: calc(20 / 306 * 100vw);
+  opacity: 0.6;
   transition: opacity 0.15s;
+  background: url('../assets/spotify_icon.svg') center / calc(14 / 306 * 100vw) no-repeat;
 }
 
 .btn-spotify-toggle:hover {
   opacity: 1;
 }
+
 
 /* Dropdown panel for Spotify connection */
 .spotify-panel {

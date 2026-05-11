@@ -212,13 +212,6 @@ export default function App() {
         <span className="time-remaining">{formatTime(duration - currentTime)}</span>
       </div>
 
-      {/* Spotify settings toggle */}
-      <div
-        className="btn btn-spotify-toggle"
-        onClick={() => setShowSpotifyPanel((v) => !v)}
-        title="Spotify"
-      />
-
       {/* Spotify connection panel */}
       {showSpotifyPanel && (
         <div className="spotify-panel">
@@ -282,6 +275,7 @@ export default function App() {
       <div className="btn btn-next" onClick={next} />
 
       {/* Window control click targets */}
+      <div className="btn btn-spotify-toggle" onClick={() => setShowSpotifyPanel((v) => !v)} title="Spotify" />
       <div className="btn btn-minimize" onClick={() => window.cupid?.minimize()} />
       <div className="btn btn-window" onClick={() => window.cupid?.maximize()} />
       <div className="btn btn-exit" onClick={() => window.cupid?.close()} />
