@@ -10,6 +10,7 @@ A pixel-art desktop music player built with Electron, Vite, and React.
 - Marquee scrolling for long track titles
 - Pink and blue theme switching with persistent preference
 - Spotify integration — browse your playlists and play tracks via yt-dlp
+- Apple Music integration — browse your library playlists via MusicKit JS
 - Local MP3 playback from the `audio/` directory
 - Custom frameless window with drag and resize
 - Dynamic dock/taskbar icon that matches the active theme
@@ -26,6 +27,12 @@ npm run dev
 Cupid Player can stream any track from your Spotify playlists. Audio is fetched from YouTube via yt-dlp, so **Spotify Premium is not required**.
 
 See [SPOTIFY_SETUP.md](SPOTIFY_SETUP.md) for full setup instructions.
+
+## Apple Music Setup
+
+Browse your Apple Music library playlists. Requires an Apple Developer account for the MusicKit key. **Apple Music subscription is not required for playback.**
+
+See [APPLE_MUSIC_SETUP.md](APPLE_MUSIC_SETUP.md) for full setup instructions.
 
 ## Local Playback
 
@@ -57,4 +64,5 @@ cp -r "out/mac-arm64/Cupid Player.app" /Applications/
 - Electron + Vite + React
 - yt-dlp for audio streaming
 - Spotify Web API for playlists and metadata
+- Apple MusicKit JS for library access
 - CSS custom properties for theme switching
