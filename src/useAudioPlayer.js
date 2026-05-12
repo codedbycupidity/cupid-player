@@ -89,7 +89,7 @@ export default function useAudioPlayer() {
 
   const seek = useCallback((fraction) => {
     if (audio.duration) {
-      audio.currentTime = fraction * audio.duration;
+      audio.currentTime = Math.min(fraction, 1) * audio.duration;
     }
   }, []);
 

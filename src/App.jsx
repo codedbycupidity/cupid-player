@@ -1,23 +1,14 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useRef, useEffect, useState } from 'react';
 import './App.css';
 import useAudioPlayer from './useAudioPlayer';
 import useSpotifyPlayer from './useSpotifyPlayer';
+import useTheme from './useTheme';
 import { login, handleCallback, isLoggedIn, logout } from './spotify/auth.js';
 import { parsePlaylistUrl, fetchPlaylistTracks } from './spotify/api.js';
 
-import frame from '../assets/frame.png';
-import plant from '../assets/plant.png';
-import progressBar from '../assets/progress_bar.png';
 import progressBarStars from '../assets/progress_bar_stars.png';
-import starDefault from '../assets/star_selected.png';
-import backwardsButton from '../assets/backwards_button.png';
-import pauseButton from '../assets/pause_button.png';
-import playButton from '../assets/play_button.png';
-import forwardsButton from '../assets/forwards_button.png';
-import exitButton from '../assets/exit_button.png';
-import minimizerButton from '../assets/minimizer_button.png';
-import windowButton from '../assets/window_button.png';
-import albumFrame from '../assets/album_frame.png';
+import star from '../assets/star.png';
+import starSelected from '../assets/star_selected.png';
 
 function useResize(corner) {
   const onMouseDown = useCallback((e) => {
@@ -46,27 +37,47 @@ function useResize(corner) {
 }
 
 function formatTime(seconds) {
-  if (!seconds || !isFinite(seconds)) return '0:00';
+  if (!seconds || !isFinite(seconds) || seconds < 0) return '0:00';
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+function MarqueeText({ className, text }) {
+  const outerRef = useRef(null);
+  const textRef = useRef(null);
+  const [shouldScroll, setShouldScroll] = useState(false);
+
+  useEffect(() => {
+    const outer = outerRef.current;
+    const textEl = textRef.current;
+    if (!outer || !textEl) return;
+    setShouldScroll(textEl.offsetWidth > outer.clientWidth);
+  }, [text]);
+
+  return (
+    <div className={`${className} marquee-container`} ref={outerRef}>
+      {/* Hidden span to measure true text width */}
+      <span ref={textRef} className="marquee-measure">{text}</span>
+      <span className={shouldScroll ? 'marquee-scroll' : ''}>
+        {text}
+        {shouldScroll && <span className="marquee-gap">{text}</span>}
+      </span>
+    </div>
+  );
+}
+
 export default function App() {
   // ── Source state ─────────────────────────────────────────
-  const [source, setSource] = useState('local'); // 'local' | 'spotify'
+  const [source, setSource] = useState('local');
   const [spotifyConnected, setSpotifyConnected] = useState(isLoggedIn());
   const [spotifyTracks, setSpotifyTracks] = useState([]);
   const [playlistUrl, setPlaylistUrl] = useState('');
   const [loadingPlaylist, setLoadingPlaylist] = useState(false);
   const [spotifyError, setSpotifyError] = useState(null);
-  const [showSpotifyPanel, setShowSpotifyPanel] = useState(false);
 
-  // ── Hooks for both sources ──────────────────────────────
   const local = useAudioPlayer();
   const spotify = useSpotifyPlayer(spotifyTracks);
-
-  // Choose the active player based on source
   const player = source === 'spotify' ? spotify : local;
 
   const {
@@ -104,19 +115,16 @@ export default function App() {
       setSpotifyError('Invalid Spotify playlist URL');
       return;
     }
-
     setLoadingPlaylist(true);
     setSpotifyError(null);
-
     try {
       const tracks = await fetchPlaylistTracks(id);
       if (tracks.length === 0) {
-        setSpotifyError('Playlist is empty or contains no playable tracks');
+        setSpotifyError('Playlist is empty');
         return;
       }
       setSpotifyTracks(tracks);
       setSource('spotify');
-      setShowSpotifyPanel(false);
     } catch (err) {
       setSpotifyError(err.message);
     } finally {
@@ -124,50 +132,162 @@ export default function App() {
     }
   }, [playlistUrl]);
 
-  const switchToLocal = useCallback(() => {
-    setSource('local');
-    setShowSpotifyPanel(false);
-  }, []);
+  const { theme, toggleTheme, assets } = useTheme();
 
-  const handleSpotifyConnect = useCallback(() => {
-    login();
-  }, []);
+  const [recordFrame, setRecordFrame] = useState(0);
+  const [needleFrame, setNeedleFrame] = useState(0);
+  const [isPink, setIsPink] = useState(theme === 'pink');
+  const [swapping, setSwapping] = useState(false);
+  const [needleLifted, setNeedleLifted] = useState(false);
+  const [starHovered, setStarHovered] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [hoverProgress, setHoverProgress] = useState(null);
+  const seekRef = useRef(null);
 
-  const handleSpotifyDisconnect = useCallback(() => {
-    logout();
-    setSpotifyConnected(false);
-    setSpotifyTracks([]);
-    if (source === 'spotify') setSource('local');
-  }, [source]);
+  useEffect(() => {
+    if (!dragging) return;
+    const onMouseMove = (e) => {
+      const rect = seekRef.current.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      setHoverProgress(pct);
+      seek(pct);
+    };
+    const onMouseUp = () => {
+      setDragging(false);
+      setStarHovered(false);
+      setHoverProgress(null);
+    };
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [dragging, seek]);
+  const [needleChangeFrame, setNeedleChangeFrame] = useState(0);
+  const prevTrackRef = useRef(track.title);
 
-  // ── Resize handles ─────────────────────────────────────
+  const currentFrames = isPink ? assets.recordFramesA : assets.recordFramesB;
+  const incomingFrames = isPink ? assets.recordFramesB : assets.recordFramesA;
+
+  // Spin animation while playing
+  useEffect(() => {
+    if (!isPlaying || swapping) return;
+    const interval = setInterval(() => {
+      setRecordFrame((f) => (f + 1) % currentFrames.length);
+      setNeedleFrame((f) => (f + 1) % assets.needlePlayFrames.length);
+    }, 400);
+    return () => clearInterval(interval);
+  }, [isPlaying, swapping, currentFrames.length]);
+
+  // Detect song change and trigger swap
+  // Sequence: needle lifts (0→1→2) → records swap → needle lowers (2→1→0)
+  useEffect(() => {
+    if (prevTrackRef.current === track.title) return;
+    prevTrackRef.current = track.title;
+    if (needleLifted) return;
+
+    setNeedleLifted(true);
+    setNeedleChangeFrame(0);
+
+    // Show needle lifted (frame 1 = index 1)
+    setTimeout(() => setNeedleChangeFrame(1), 200);
+
+    // Start record swap
+    setTimeout(() => setSwapping(true), 400);
+
+    // Finish swap, switch color
+    setTimeout(() => {
+      setIsPink((p) => !p);
+      setRecordFrame(0);
+      setSwapping(false);
+    }, 1000);
+
+    // Needle lower after swap is done, reset to frame 1
+    setTimeout(() => {
+      setNeedleChangeFrame(0);
+      setNeedleLifted(false);
+      setNeedleFrame(0);
+    }, 1100);
+
+  }, [track.title, needleLifted]);
+
   const resizeTL = useResize('top-left');
   const resizeTR = useResize('top-right');
   const resizeBL = useResize('bottom-left');
   const resizeBR = useResize('bottom-right');
 
   return (
-    <div className="player">
+    <div className={`player ${theme === 'blue' ? 'theme-blue' : ''}`}>
       {/* Base frame */}
-      <img src={frame} className="layer" alt="" draggable={false} />
+      <img src={assets.frame} className="layer" alt="" draggable={false} />
+
+      {/* Window title */}
+      <div className="window-title">cupid player</div>
+
+      {/* Record player centered in frame */}
+      <img src={assets.recordPlayer} className="record-player" alt="" draggable={false} />
+      <img
+        src={currentFrames[recordFrame]}
+        className={`record-player ${swapping ? 'record-slide-out' : ''}`}
+        alt=""
+        draggable={false}
+      />
+      {swapping && (
+        <img
+          src={incomingFrames[0]}
+          className="record-player record-slide-in"
+          alt=""
+          draggable={false}
+        />
+      )}
+      <img
+        src={needleLifted ? assets.needleChangeFrames[needleChangeFrame] : assets.needlePlayFrames[needleFrame]}
+        className="record-player"
+        alt=""
+        draggable={false}
+      />
+
+      {/* Frame overlay (no background) to clip sliding records */}
+      <img src={assets.frameNoBg} className="layer frame-overlay" alt="" draggable={false} />
 
       {/* Decorative */}
-      <img src={plant} className="layer" alt="" draggable={false} />
+      <img src={assets.plant} className="layer layer-ui" alt="" draggable={false} />
 
       {/* Progress bar layers */}
-      <img src={progressBar} className="layer" alt="" draggable={false} />
-      <img src={progressBarStars} className="layer" alt="" draggable={false} />
-      <img src={starDefault} className="layer" alt="" draggable={false} />
+      <img src={assets.progressBar} className="layer layer-ui" alt="" draggable={false} />
+      <img
+        src={progressBarStars}
+        className="layer layer-ui"
+        alt=""
+        draggable={false}
+        style={{
+          clipPath: `inset(0 ${(1 - (131 + (hoverProgress ?? progress) * 226 + 10) / 512) * 100}% 0 0)`,
+        }}
+      />
+      <img
+        src={starHovered ? starSelected : star}
+        className={`layer layer-ui star-indicator ${starHovered ? 'star-hovered' : ''}`}
+        alt=""
+        draggable={false}
+        style={{
+          transform: `translateX(calc(-3 / 306 * 100vw + ${(hoverProgress ?? progress) * (226 / 512) * 171.9}vw))`,
+        }}
+      />
 
       {/* Playback control layers (visual only) */}
-      <img src={backwardsButton} className="layer" alt="" draggable={false} />
-      <img src={isPlaying ? pauseButton : playButton} className="layer" alt="" draggable={false} />
-      <img src={forwardsButton} className="layer" alt="" draggable={false} />
+      <img src={assets.backwardsButton} className="layer layer-ui" alt="" draggable={false} />
+      <img src={isPlaying? assets.pauseButton : assets.playButton} className="layer layer-ui" alt="" draggable={false} />
+      <img src={assets.forwardsButton} className="layer layer-ui" alt="" draggable={false} />
 
       {/* Window control layers (visual only) */}
-      <img src={minimizerButton} className="layer" alt="" draggable={false} />
-      <img src={windowButton} className="layer" alt="" draggable={false} />
-      <img src={exitButton} className="layer" alt="" draggable={false} />
+      <img src={assets.minimizerButton} className="layer layer-ui" alt="" draggable={false} />
+      <img src={assets.windowButton} className="layer layer-ui" alt="" draggable={false} />
+      <img src={assets.exitButton} className="layer layer-ui" alt="" draggable={false} />
+
+      {/* Settings button layer */}
+      <img src={assets.settings} className="layer layer-ui settings-layer" alt="" draggable={false} />
 
       {/* SVG clip-path for pixel-art album mask */}
       <svg width="0" height="0" style={{ position: 'absolute' }}>
@@ -193,7 +313,7 @@ export default function App() {
       )}
 
       {/* Album frame overlay */}
-      <img src={albumFrame} className="layer album-frame-layer" alt="" draggable={false} />
+      <img src={assets.albumFrame} className="layer album-frame-layer" alt="" draggable={false} />
 
       {/* Now playing section */}
       <div className="now-playing">
@@ -201,7 +321,7 @@ export default function App() {
           <div className="now-playing-label">
             {source === 'spotify' ? 'spotify' : 'now playing...'}
           </div>
-          <div className="track-title">{track.title}</div>
+          <MarqueeText className="track-title" text={track.title} />
           <div className="track-artist">by {track.artist}</div>
         </div>
       </div>
@@ -212,54 +332,6 @@ export default function App() {
         <span className="time-remaining">{formatTime(duration - currentTime)}</span>
       </div>
 
-      {/* Spotify connection panel */}
-      {showSpotifyPanel && (
-        <div className="spotify-panel">
-          <div className="spotify-panel-inner">
-            {!spotifyConnected ? (
-              <>
-                <div className="spotify-label">connect spotify</div>
-                <button className="spotify-btn" onClick={handleSpotifyConnect}>
-                  log in
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="spotify-label">
-                  spotify {source === 'spotify' ? '(active)' : '(connected)'}
-                </div>
-                <input
-                  className="spotify-input"
-                  type="text"
-                  placeholder="paste playlist url..."
-                  value={playlistUrl}
-                  onChange={(e) => setPlaylistUrl(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && loadSpotifyPlaylist()}
-                />
-                <div className="spotify-btn-row">
-                  <button
-                    className="spotify-btn"
-                    onClick={loadSpotifyPlaylist}
-                    disabled={loadingPlaylist}
-                  >
-                    {loadingPlaylist ? '...' : 'load'}
-                  </button>
-                  {source === 'spotify' && (
-                    <button className="spotify-btn" onClick={switchToLocal}>
-                      local
-                    </button>
-                  )}
-                  <button className="spotify-btn spotify-btn-disconnect" onClick={handleSpotifyDisconnect}>
-                    logout
-                  </button>
-                </div>
-                {spotifyError && <div className="spotify-error">{spotifyError}</div>}
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Drag region for moving the window */}
       <div className="drag-region" />
 
@@ -268,6 +340,22 @@ export default function App() {
       <div className="resize-handle top-right" onMouseDown={resizeTR} />
       <div className="resize-handle bottom-left" onMouseDown={resizeBL} />
       <div className="resize-handle bottom-right" onMouseDown={resizeBR} />
+
+      {/* Progress bar seek target */}
+      <div
+        className="progress-seek"
+        ref={seekRef}
+        onMouseEnter={() => setStarHovered(true)}
+        onMouseLeave={() => { if (!dragging) { setStarHovered(false); } }}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          setDragging(true);
+          const rect = e.currentTarget.getBoundingClientRect();
+          const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+          setHoverProgress(pct);
+          seek(pct);
+        }}
+      />
 
       {/* Playback control click targets */}
       <div className="btn btn-prev" onClick={prev} />
@@ -279,6 +367,72 @@ export default function App() {
       <div className="btn btn-minimize" onClick={() => window.cupid?.minimize()} />
       <div className="btn btn-window" onClick={() => window.cupid?.maximize()} />
       <div className="btn btn-exit" onClick={() => window.cupid?.close()} />
+
+      {/* Settings button */}
+      <div className="btn btn-settings" onClick={() => setShowSettings((v) => !v)} />
+
+      {/* Settings panel */}
+      {showSettings && (
+        <div className="settings-panel">
+          <div className="settings-panel-inner">
+            <div className="settings-label">theme</div>
+            <div className="settings-theme-row">
+              <button
+                className={`settings-theme-btn ${theme === 'pink' ? 'active' : ''}`}
+                onClick={() => { if (theme !== 'pink') toggleTheme(); }}
+              >
+                pink
+              </button>
+              <button
+                className={`settings-theme-btn ${theme === 'blue' ? 'active' : ''}`}
+                onClick={() => { if (theme !== 'blue') toggleTheme(); }}
+              >
+                blue
+              </button>
+            </div>
+            <div className="settings-label">spotify</div>
+            {!spotifyConnected ? (
+              <button className="settings-theme-btn" onClick={() => login()}>
+                log in
+              </button>
+            ) : (
+              <>
+                <input
+                  className="settings-input"
+                  type="text"
+                  placeholder="paste playlist url..."
+                  value={playlistUrl}
+                  onChange={(e) => setPlaylistUrl(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && loadSpotifyPlaylist()}
+                />
+                <div className="settings-theme-row">
+                  <button
+                    className="settings-theme-btn"
+                    onClick={loadSpotifyPlaylist}
+                    disabled={loadingPlaylist}
+                  >
+                    {loadingPlaylist ? '...' : 'load'}
+                  </button>
+                  {source === 'spotify' && (
+                    <button className="settings-theme-btn" onClick={() => setSource('local')}>
+                      local
+                    </button>
+                  )}
+                  <button className="settings-theme-btn" onClick={() => {
+                    logout();
+                    setSpotifyConnected(false);
+                    setSpotifyTracks([]);
+                    if (source === 'spotify') setSource('local');
+                  }}>
+                    logout
+                  </button>
+                </div>
+                {spotifyError && <div className="settings-error">{spotifyError}</div>}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

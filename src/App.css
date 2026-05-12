@@ -4,7 +4,20 @@
   height: 100vh;
   overflow: hidden;
   border-radius: calc(5 / 306 * 100vw); /* match frame's pixel-art rounded corners */
+  clip-path: inset(0 0 0 calc(3 / 306 * 100vw));
+  --color-title: #78364F;
+  --color-primary: #5a3a4a;
+  --color-secondary: #8a6a7a;
+  --color-panel-text: #F6CFC8;
 }
+
+.player.theme-blue {
+  --color-title: #063940;
+  --color-primary: #063940;
+  --color-secondary: #1a6b6b;
+  --color-panel-text: #C8D3F6;
+}
+
 
 .layer {
   position: absolute;
@@ -26,6 +39,18 @@
   pointer-events: auto;
   cursor: pointer;
   -webkit-app-region: no-drag;
+}
+
+.window-title {
+  position: absolute;
+  left: calc((134 - 110) / 306 * 100vw);
+  top: calc((50 - 23) / 306 * 100vw);
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(20 / 306 * 100vw);
+  color: var(--color-title);
+  z-index: 50;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* Invisible drag region for moving the frameless window */
@@ -83,6 +108,94 @@
   top: calc((48 - 23) / 306 * 100vw);
 }
 
+.settings-layer {
+  transform: scale(0.85);
+  transform-origin: calc(310 / 512 * 100%) calc(57 / 512 * 100%);
+}
+
+.btn-settings {
+  left: calc((305 - 110) / 306 * 100vw);
+  top: calc((48 - 23) / 306 * 100vw);
+}
+
+.settings-panel {
+  position: absolute;
+  top: calc((70 - 23) / 306 * 100vw);
+  right: calc((526 - 400 - 110) / 306 * 100vw);
+  z-index: 300;
+  -webkit-app-region: no-drag;
+  pointer-events: auto;
+}
+
+.settings-panel-inner {
+  background: var(--color-primary);
+  border: calc(2 / 306 * 100vw) solid var(--color-secondary);
+  border-radius: calc(4 / 306 * 100vw);
+  padding: calc(8 / 306 * 100vw);
+  min-width: calc(100 / 306 * 100vw);
+  display: flex;
+  flex-direction: column;
+  gap: calc(5 / 306 * 100vw);
+}
+
+.settings-label {
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(11 / 306 * 100vw);
+  color: var(--color-panel-text);
+  white-space: nowrap;
+}
+
+.settings-theme-row {
+  display: flex;
+  gap: calc(4 / 306 * 100vw);
+}
+
+.settings-theme-btn {
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(10 / 306 * 100vw);
+  background: none;
+  border: calc(1 / 306 * 100vw) solid var(--color-panel-text);
+  border-radius: calc(2 / 306 * 100vw);
+  color: var(--color-panel-text);
+  padding: calc(3 / 306 * 100vw) calc(6 / 306 * 100vw);
+  cursor: pointer;
+}
+
+.settings-theme-btn.active {
+  background: var(--color-panel-text);
+  color: var(--color-primary);
+}
+
+.settings-input {
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(10 / 306 * 100vw);
+  background: rgba(0, 0, 0, 0.3);
+  border: calc(1 / 306 * 100vw) solid var(--color-panel-text);
+  border-radius: calc(2 / 306 * 100vw);
+  color: var(--color-panel-text);
+  padding: calc(3 / 306 * 100vw) calc(4 / 306 * 100vw);
+  outline: none;
+}
+
+.settings-error {
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(9 / 306 * 100vw);
+  color: #ff6b6b;
+}
+
+/* Progress bar seek target */
+.progress-seek {
+  position: absolute;
+  left: calc((140 - 110) / 306 * 100vw);
+  top: calc((469 - 23) / 306 * 100vw);
+  width: calc(241 / 306 * 100vw);
+  height: calc(6 / 306 * 100vw);
+  z-index: 150;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+
 /* Playback control click targets */
 .btn-prev {
   left: calc((167 - 110) / 306 * 100vw);
@@ -117,9 +230,47 @@
   pointer-events: none;
 }
 
+.record-player {
+  position: absolute;
+  width: calc(200 / 306 * 100vw);
+  left: 50%;
+  top: calc(120 / 306 * 100vw);
+  transform: translateX(-50%);
+  image-rendering: pixelated;
+  pointer-events: none;
+  user-select: none;
+  z-index: 10;
+}
+
+.frame-overlay {
+  z-index: 15;
+}
+
+.layer-ui {
+  z-index: 20;
+}
+
+.record-slide-out {
+  animation: slide-out 0.6s ease-in forwards;
+}
+
+.record-slide-in {
+  animation: slide-in 0.6s ease-out forwards;
+}
+
+@keyframes slide-out {
+  0% { transform: translate(-50%, 0); }
+  100% { transform: translate(calc(-50% - 60vw), 20vw); }
+}
+
+@keyframes slide-in {
+  0% { transform: translate(calc(-50% - 60vw), 20vw); }
+  100% { transform: translate(-50%, 0); }
+}
+
 .album-frame-layer {
-  left: calc(-35.95vw + 24 / 306 * 100vw);
-  top: calc(-23 / 306 * 100vw + 3 / 306 * 100vw);
+  left: calc(-35.95vw - 1 / 306 * 100vw);
+  top: calc(-23 / 306 * 100vw);
   z-index: 45;
 }
 
@@ -150,23 +301,43 @@
 .now-playing-label {
   font-family: 'Rainyhearts', monospace;
   font-size: calc(12 / 306 * 100vw);
-  color: #8a6a7a;
+  color: var(--color-secondary);
 }
 
 .track-title {
   font-family: 'Rainyhearts', monospace;
   font-size: calc(24 / 306 * 100vw);
-  color: #5a3a4a;
+  color: var(--color-primary);
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: calc(200 / 306 * 100vw);
+  max-width: calc(170 / 306 * 100vw);
+}
+
+.marquee-measure {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.marquee-scroll {
+  display: inline-block;
+  animation: marquee 8s linear infinite;
+}
+
+.marquee-gap {
+  margin-left: calc(28 / 306 * 100vw);
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 .track-artist {
   font-family: 'Rainyhearts', monospace;
   font-size: calc(14 / 306 * 100vw);
-  color: #8a6a7a;
+  color: var(--color-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -185,7 +356,7 @@
   pointer-events: none;
   font-family: 'Rainyhearts', monospace;
   font-size: calc(12 / 306 * 100vw);
-  color: #5a3a4a;
+  color: var(--color-primary);
 }
 
 .resize-handle.top-left {
