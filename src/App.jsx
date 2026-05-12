@@ -100,12 +100,12 @@ export default function App() {
   } = player;
 
   // ── Fetch Spotify playlists ────────────────────────────
-  const loadSpotifyPlaylists = useCallback(() => {
+  const loadSpotifyPlaylists = useCallback((silent = false) => {
     setLoadingPlaylists(true);
-    setSettingsError(null);
+    if (!silent) setSettingsError(null);
     fetchSpotifyPlaylists()
-      .then(setSpotifyPlaylists)
-      .catch((err) => setSettingsError(err.message))
+      .then((p) => { setSpotifyPlaylists(p); setSettingsError(null); })
+      .catch((err) => { if (!silent) setSettingsError(err.message); })
       .finally(() => setLoadingPlaylists(false));
   }, []);
 
@@ -127,12 +127,13 @@ export default function App() {
         try {
           await handleCallback();
           setSpotifyConnected(true);
-          loadSpotifyPlaylists();
+          // Small delay to let token settle before fetching
+          setTimeout(() => loadSpotifyPlaylists(true), 500);
         } catch (err) {
           setSettingsError(err.message);
         }
       } else {
-        if (isSpotifyLoggedIn()) loadSpotifyPlaylists();
+        if (isSpotifyLoggedIn()) loadSpotifyPlaylists(true);
         if (isAppleLoggedIn()) loadApplePlaylists();
       }
     }
