@@ -133,7 +133,9 @@
   border-radius: calc(4 / 306 * 100vw);
   padding: calc(6 / 306 * 100vw);
   width: calc(140 / 306 * 100vw);
-  max-height: calc(140 / 306 * 100vw);
+  max-height: calc(200 / 306 * 100vw);
+  overflow-y: auto;
+  scrollbar-width: none;
   display: flex;
   flex-direction: column;
   gap: calc(4 / 306 * 100vw);

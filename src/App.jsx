@@ -80,9 +80,11 @@ export default function App() {
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   const [loadingPlaylist, setLoadingPlaylist] = useState(false);
   const [settingsError, setSettingsError] = useState(null);
+  const [musicService, setMusicService] = useState('spotify');
+  const [shuffle, setShuffle] = useState(false);
 
-  const local = useAudioPlayer();
-  const streaming = useSpotifyPlayer(streamTracks);
+  const local = useAudioPlayer(shuffle);
+  const streaming = useSpotifyPlayer(streamTracks, shuffle);
   const player = source === 'streaming' ? streaming : local;
 
   const {
@@ -414,83 +416,117 @@ export default function App() {
                 blue
               </button>
             </div>
-            <div className="settings-label">spotify</div>
-            {!spotifyConnected ? (
-              <button className="settings-theme-btn" onClick={() => spotifyLogin()}>
-                log in
+            <div className="settings-label">music</div>
+            <div className="settings-theme-row">
+              <button
+                className={`settings-theme-btn ${musicService === 'spotify' ? 'active' : ''}`}
+                onClick={() => setMusicService('spotify')}
+              >
+                spotify
               </button>
-            ) : (
-              <>
-                <div className="settings-playlist-list">
-                  {loadingPlaylists ? (
-                    <div className="settings-label">loading...</div>
-                  ) : (
-                    spotifyPlaylists.map((p) => (
+              <button
+                className={`settings-theme-btn ${musicService === 'apple' ? 'active' : ''}`}
+                onClick={() => setMusicService('apple')}
+              >
+                apple
+              </button>
+              <button
+                className={`settings-theme-btn settings-shuffle ${shuffle ? 'active' : ''}`}
+                onClick={() => setShuffle((s) => !s)}
+                title="Shuffle"
+              >
+                &#8645;
+              </button>
+            </div>
+
+            {musicService === 'spotify' && (
+              !spotifyConnected ? (
+                <button className="settings-theme-btn" onClick={() => spotifyLogin()}>
+                  log in
+                </button>
+              ) : (
+                <>
+                  <div className="settings-playlist-list">
+                    {loadingPlaylists ? (
+                      <div className="settings-label">loading...</div>
+                    ) : (
+                      spotifyPlaylists.map((p) => (
+                        <button
+                          key={p.id}
+                          className={`settings-playlist-item ${loadingPlaylist ? 'disabled' : ''}`}
+                          onClick={() => loadPlaylist(p.id, 'spotify')}
+                          disabled={loadingPlaylist}
+                        >
+                          {p.name}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                  <div className="settings-theme-row">
+                    {source === 'streaming' && (
+                      <button className="settings-theme-btn" onClick={() => setSource('local')}>
+                        local
+                      </button>
+                    )}
+                    <button className="settings-theme-btn" onClick={() => {
+                      spotifyLogout();
+                      setSpotifyConnected(false);
+                      setSpotifyPlaylists([]);
+                      if (source === 'streaming') setSource('local');
+                    }}>
+                      logout
+                    </button>
+                  </div>
+                </>
+              )
+            )}
+
+            {musicService === 'apple' && (
+              !appleConnected ? (
+                <button className="settings-theme-btn" onClick={async () => {
+                  try {
+                    await appleLogin();
+                    setAppleConnected(true);
+                    loadApplePlaylists();
+                  } catch (err) {
+                    setSettingsError(err.message);
+                  }
+                }}>
+                  log in
+                </button>
+              ) : (
+                <>
+                  <div className="settings-playlist-list">
+                    {applePlaylists.map((p) => (
                       <button
                         key={p.id}
                         className={`settings-playlist-item ${loadingPlaylist ? 'disabled' : ''}`}
-                        onClick={() => loadPlaylist(p.id, 'spotify')}
+                        onClick={() => loadPlaylist(p.id, 'apple')}
                         disabled={loadingPlaylist}
                       >
                         {p.name}
                       </button>
-                    ))
-                  )}
-                </div>
-                <button className="settings-theme-btn" onClick={() => {
-                  spotifyLogout();
-                  setSpotifyConnected(false);
-                  setSpotifyPlaylists([]);
-                  if (source === 'streaming') setSource('local');
-                }}>
-                  logout
-                </button>
-              </>
-            )}
-
-            <div className="settings-label">apple music</div>
-            {!appleConnected ? (
-              <button className="settings-theme-btn" onClick={async () => {
-                try {
-                  await appleLogin();
-                  setAppleConnected(true);
-                  loadApplePlaylists();
-                } catch (err) {
-                  setSettingsError(err.message);
-                }
-              }}>
-                log in
-              </button>
-            ) : (
-              <>
-                <div className="settings-playlist-list">
-                  {applePlaylists.map((p) => (
-                    <button
-                      key={p.id}
-                      className={`settings-playlist-item ${loadingPlaylist ? 'disabled' : ''}`}
-                      onClick={() => loadPlaylist(p.id, 'apple')}
-                      disabled={loadingPlaylist}
-                    >
-                      {p.name}
+                    ))}
+                  </div>
+                  <div className="settings-theme-row">
+                    {source === 'streaming' && (
+                      <button className="settings-theme-btn" onClick={() => setSource('local')}>
+                        local
+                      </button>
+                    )}
+                    <button className="settings-theme-btn" onClick={() => {
+                      appleLogout();
+                      setAppleConnected(false);
+                      setApplePlaylists([]);
+                      if (source === 'streaming') setSource('local');
+                    }}>
+                      logout
                     </button>
-                  ))}
-                </div>
-                <button className="settings-theme-btn" onClick={() => {
-                  appleLogout();
-                  setAppleConnected(false);
-                  setApplePlaylists([]);
-                  if (source === 'streaming') setSource('local');
-                }}>
-                  logout
-                </button>
-              </>
+                  </div>
+                </>
+              )
             )}
 
-            {source === 'streaming' && (
-              <button className="settings-theme-btn" onClick={() => setSource('local')}>
-                local
-              </button>
-            )}
             {settingsError && <div className="settings-error">{settingsError}</div>}
           </div>
         </div>
