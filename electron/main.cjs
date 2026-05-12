@@ -212,18 +212,6 @@ function createWindow() {
     win.setIcon(iconPath);
   };
 
-  ipcMain.handle('get-apple-music-token', () => {
-    return generateAppleMusicToken();
-  });
-
-  ipcMain.handle('get-stream-url', async (_e, title, artist) => {
-    try {
-      return await getStreamUrl(title, artist);
-    } catch (err) {
-      throw new Error(`Failed to get stream: ${err.message}`);
-    }
-  });
-
   ipcMain.on('window-minimize', onMinimize);
   ipcMain.on('window-maximize', onMaximize);
   ipcMain.on('window-close', onClose);
@@ -239,8 +227,6 @@ function createWindow() {
     ipcMain.removeListener('window-resize', onResize);
     ipcMain.removeListener('open-external', onOpenExternal);
     ipcMain.removeListener('set-theme', onSetTheme);
-    ipcMain.removeHandler('get-stream-url');
-    ipcMain.removeHandler('get-apple-music-token');
   });
 
   // Handle Spotify OAuth callback in production.
@@ -270,6 +256,19 @@ function createWindow() {
     win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
   }
 }
+
+// ── Global IPC handlers (persist across window reloads) ──
+ipcMain.handle('get-apple-music-token', () => {
+  return generateAppleMusicToken();
+});
+
+ipcMain.handle('get-stream-url', async (_e, title, artist) => {
+  try {
+    return await getStreamUrl(title, artist);
+  } catch (err) {
+    throw new Error(`Failed to get stream: ${err.message}`);
+  }
+});
 
 app.whenReady().then(() => {
   if (process.platform === 'darwin' && app.dock) {
