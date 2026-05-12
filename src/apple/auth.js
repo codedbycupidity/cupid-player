@@ -16,13 +16,26 @@ let musicKitInstance = null;
  */
 function loadMusicKitScript() {
   return new Promise((resolve, reject) => {
-    if (document.querySelector('script[src*="musickit"]')) {
+    if (window.MusicKit) {
       resolve();
+      return;
+    }
+    if (document.querySelector('script[src*="musickit"]')) {
+      // Script tag exists but MusicKit not ready yet — poll for it
+      const poll = setInterval(() => {
+        if (window.MusicKit) { clearInterval(poll); resolve(); }
+      }, 100);
+      setTimeout(() => { clearInterval(poll); reject(new Error('MusicKit JS timed out')); }, 10000);
       return;
     }
     const script = document.createElement('script');
     script.src = 'https://js-cdn.music.apple.com/musickit/v3/musickit.js';
-    script.onload = resolve;
+    script.onload = () => {
+      const poll = setInterval(() => {
+        if (window.MusicKit) { clearInterval(poll); resolve(); }
+      }, 100);
+      setTimeout(() => { clearInterval(poll); reject(new Error('MusicKit JS timed out')); }, 10000);
+    };
     script.onerror = () => reject(new Error('Failed to load MusicKit JS'));
     document.head.appendChild(script);
   });
@@ -30,19 +43,19 @@ function loadMusicKitScript() {
 
 /**
  * Initialize MusicKit with a developer token from the main process.
+ * Only call this when the user wants to use Apple Music.
  */
 export async function initMusicKit() {
   if (musicKitInstance) return musicKitInstance;
 
-  // Get developer token from main process
   const devToken = await window.cupid.getAppleMusicToken();
-  if (!devToken) throw new Error('No Apple Music developer token');
+  if (!devToken) throw new Error('No Apple Music developer token — check your .env and .p8 key file');
 
   localStorage.setItem(DEVELOPER_TOKEN_KEY, devToken);
 
   await loadMusicKitScript();
 
-  await window.MusicKit.configure({
+  musicKitInstance = await window.MusicKit.configure({
     developerToken: devToken,
     app: {
       name: 'Cupid Player',
@@ -50,7 +63,6 @@ export async function initMusicKit() {
     },
   });
 
-  musicKitInstance = window.MusicKit.getInstance();
   return musicKitInstance;
 }
 
