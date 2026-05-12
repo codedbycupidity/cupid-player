@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, shell } = require('electron');
 const path = require('node:path');
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -18,7 +18,7 @@ function createWindow() {
     transparent: true,
     backgroundColor: '#00000000',
     hasShadow: false,
-    icon: path.join(__dirname, '..', 'assets', 'favicon.png'),
+    icon: path.join(__dirname, '..', 'assets', 'pink', 'favicon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
@@ -95,10 +95,43 @@ function createWindow() {
     }
   };
 
+  const onOpenExternal = (_e, url) => {
+    if (typeof url === 'string' && url.startsWith('https://')) {
+      if (url.includes('accounts.spotify.com/authorize')) {
+        const authWin = new BrowserWindow({
+          width: 500,
+          height: 700,
+          parent: win,
+          modal: true,
+          show: true,
+          webPreferences: { nodeIntegration: false, contextIsolation: true },
+        });
+        authWin.loadURL(url);
+        authWin.webContents.on('will-redirect', (event, redirectUrl) => {
+          if (redirectUrl.startsWith('http://127.0.0.1:5173/callback')) {
+            event.preventDefault();
+            win.loadURL(redirectUrl);
+            authWin.close();
+          }
+        });
+        authWin.webContents.on('will-navigate', (event, navUrl) => {
+          if (navUrl.startsWith('http://127.0.0.1:5173/callback')) {
+            event.preventDefault();
+            win.loadURL(navUrl);
+            authWin.close();
+          }
+        });
+        return;
+      }
+      shell.openExternal(url);
+    }
+  };
+
   ipcMain.on('window-minimize', onMinimize);
   ipcMain.on('window-maximize', onMaximize);
   ipcMain.on('window-close', onClose);
   ipcMain.on('window-resize', onResize);
+  ipcMain.on('open-external', onOpenExternal);
 
   // Clean up IPC listeners when window is destroyed
   win.on('closed', () => {
@@ -106,6 +139,7 @@ function createWindow() {
     ipcMain.removeListener('window-maximize', onMaximize);
     ipcMain.removeListener('window-close', onClose);
     ipcMain.removeListener('window-resize', onResize);
+    ipcMain.removeListener('open-external', onOpenExternal);
   });
 
   if (isDev) {
@@ -117,6 +151,9 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  if (process.platform === 'darwin' && app.dock) {
+    app.dock.setIcon(path.join(__dirname, '..', 'assets', 'pink', 'favicon.png'));
+  }
   createWindow();
 
   app.on('activate', () => {

@@ -6,4 +6,5 @@ contextBridge.exposeInMainWorld('cupid', {
   maximize: () => ipcRenderer.send('window-maximize'),
   close: () => ipcRenderer.send('window-close'),
   resize: (data) => ipcRenderer.send('window-resize', data),
+  openExternal: (url) => ipcRenderer.send('open-external', url),
 });
