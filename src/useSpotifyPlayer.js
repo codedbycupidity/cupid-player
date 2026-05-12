@@ -9,8 +9,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-export default function useSpotifyPlayer(tracks) {
+export default function useSpotifyPlayer(tracks, shuffle = false) {
   const audioRef = useRef(new Audio());
+  const shuffleRef = useRef(shuffle);
+  shuffleRef.current = shuffle;
   const [trackIndex, setTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -82,7 +84,14 @@ export default function useSpotifyPlayer(tracks) {
     };
 
     const onEnded = () => {
-      setTrackIndex((prev) => (prev + 1) % tracks.length);
+      setTrackIndex((prev) => {
+        if (shuffleRef.current && tracks.length > 1) {
+          let next;
+          do { next = Math.floor(Math.random() * tracks.length); } while (next === prev);
+          return next;
+        }
+        return (prev + 1) % tracks.length;
+      });
     };
 
     audio.addEventListener('timeupdate', onTimeUpdate);
@@ -109,7 +118,14 @@ export default function useSpotifyPlayer(tracks) {
   }, [isPlaying]);
 
   const next = useCallback(() => {
-    setTrackIndex((prev) => (prev + 1) % tracks.length);
+    setTrackIndex((prev) => {
+      if (shuffleRef.current && tracks.length > 1) {
+        let n;
+        do { n = Math.floor(Math.random() * tracks.length); } while (n === prev);
+        return n;
+      }
+      return (prev + 1) % tracks.length;
+    });
     setIsPlaying(true);
   }, [tracks.length]);
 

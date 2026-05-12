@@ -8,8 +8,10 @@ import playlist from './playlist';
  * The App component chooses between this and useSpotifyPlayer
  * based on the active source.
  */
-export default function useAudioPlayer() {
+export default function useAudioPlayer(shuffle = false) {
   const audioRef = useRef(new Audio());
+  const shuffleRef = useRef(shuffle);
+  shuffleRef.current = shuffle;
   const [trackIndex, setTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -46,7 +48,14 @@ export default function useAudioPlayer() {
     };
 
     const onEnded = () => {
-      setTrackIndex((prev) => (prev + 1) % playlist.length);
+      setTrackIndex((prev) => {
+        if (shuffleRef.current) {
+          let next;
+          do { next = Math.floor(Math.random() * playlist.length); } while (next === prev && playlist.length > 1);
+          return next;
+        }
+        return (prev + 1) % playlist.length;
+      });
     };
 
     audio.addEventListener('timeupdate', onTimeUpdate);
@@ -76,7 +85,14 @@ export default function useAudioPlayer() {
   }, [isPlaying, play, pause]);
 
   const next = useCallback(() => {
-    setTrackIndex((prev) => (prev + 1) % playlist.length);
+    setTrackIndex((prev) => {
+      if (shuffleRef.current && playlist.length > 1) {
+        let n;
+        do { n = Math.floor(Math.random() * playlist.length); } while (n === prev);
+        return n;
+      }
+      return (prev + 1) % playlist.length;
+    });
   }, []);
 
   const prev = useCallback(() => {
