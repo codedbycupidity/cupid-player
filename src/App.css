@@ -386,3 +386,108 @@
   cursor: nwse-resize;
   border-bottom-right-radius: calc(5 / 306 * 100vw);
 }
+
+/* ── Spotify panel ───────────────────────────────────────── */
+
+/* Small toggle button positioned near the window controls */
+.btn-spotify-toggle {
+  left: calc((307 - 110) / 306 * 100vw);
+  top: calc((48 - 23) / 306 * 100vw);
+  width: calc(20 / 306 * 100vw);
+  height: calc(20 / 306 * 100vw);
+  opacity: 0.6;
+  transition: opacity 0.15s;
+  background: url('../assets/spotify_icon.svg') center / calc(14 / 306 * 100vw) no-repeat;
+}
+
+.btn-spotify-toggle:hover {
+  opacity: 1;
+}
+
+
+/* Dropdown panel for Spotify connection */
+.spotify-panel {
+  position: absolute;
+  top: calc((75 - 23) / 306 * 100vw);
+  right: calc((526 - 400 - 110) / 306 * 100vw);
+  z-index: 300;
+  -webkit-app-region: no-drag;
+  pointer-events: auto;
+}
+
+.spotify-panel-inner {
+  background: #2a1a2a;
+  border: calc(2 / 306 * 100vw) solid #5a3a4a;
+  border-radius: calc(4 / 306 * 100vw);
+  padding: calc(8 / 306 * 100vw);
+  min-width: calc(120 / 306 * 100vw);
+  display: flex;
+  flex-direction: column;
+  gap: calc(5 / 306 * 100vw);
+  image-rendering: pixelated;
+}
+
+.spotify-label {
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(11 / 306 * 100vw);
+  color: #8a6a7a;
+  white-space: nowrap;
+}
+
+.spotify-input {
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(10 / 306 * 100vw);
+  background: #1a0e1a;
+  border: calc(1 / 306 * 100vw) solid #5a3a4a;
+  border-radius: calc(2 / 306 * 100vw);
+  color: #d4a4b4;
+  padding: calc(3 / 306 * 100vw) calc(4 / 306 * 100vw);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.spotify-input::placeholder {
+  color: #5a3a4a;
+}
+
+.spotify-btn-row {
+  display: flex;
+  gap: calc(4 / 306 * 100vw);
+}
+
+.spotify-btn {
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(10 / 306 * 100vw);
+  background: #5a3a4a;
+  border: none;
+  border-radius: calc(2 / 306 * 100vw);
+  color: #f4d4e4;
+  padding: calc(2 / 306 * 100vw) calc(6 / 306 * 100vw);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.spotify-btn:hover {
+  background: #7a4a6a;
+}
+
+.spotify-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.spotify-btn-disconnect {
+  background: #4a2a2a;
+}
+
+.spotify-btn-disconnect:hover {
+  background: #6a3a3a;
+}
+
+.spotify-error {
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(9 / 306 * 100vw);
+  color: #c44;
+  word-break: break-word;
+}

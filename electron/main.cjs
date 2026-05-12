@@ -60,16 +60,12 @@ function createWindow() {
     if (win.isDestroyed()) return;
     const bounds = win.getBounds();
 
-    // Determine which axis contributes the most movement
-    // and compute a single scale delta to maintain aspect ratio
     const isRight = corner.includes('right');
     const isBottom = corner.includes('bottom');
 
-    // Flip signs so that dragging "outward" from the corner is always positive
     const effectiveDx = isRight ? dx : -dx;
     const effectiveDy = isBottom ? dy : -dy;
 
-    // Use whichever axis moved more
     let delta;
     if (Math.abs(effectiveDx) > Math.abs(effectiveDy)) {
       delta = effectiveDx;
@@ -79,7 +75,6 @@ function createWindow() {
 
     const dw = Math.round(delta);
     const newWidth = bounds.width + dw;
-    // Always derive height from width to keep perfect aspect ratio
     const newHeight = Math.round(newWidth / ASPECT);
     const dh = newHeight - bounds.height;
 
@@ -110,7 +105,6 @@ function createWindow() {
         const handleAuthRedirect = (event, callbackUrl) => {
           if (callbackUrl.startsWith('http://127.0.0.1:5173/callback')) {
             event.preventDefault();
-            // Extract query params and load via the dev server URL
             const url = new URL(callbackUrl);
             const devUrl = isDev
               ? `http://127.0.0.1:5173/${url.search}`
@@ -127,12 +121,6 @@ function createWindow() {
     }
   };
 
-  ipcMain.on('window-minimize', onMinimize);
-  ipcMain.on('window-maximize', onMaximize);
-  ipcMain.on('window-close', onClose);
-  ipcMain.on('window-resize', onResize);
-  ipcMain.on('open-external', onOpenExternal);
-
   const onSetTheme = (_e, theme) => {
     const iconPath = path.join(__dirname, '..', 'assets', theme, 'favicon.png');
     if (process.platform === 'darwin' && app.dock) {
@@ -140,6 +128,12 @@ function createWindow() {
     }
     win.setIcon(iconPath);
   };
+
+  ipcMain.on('window-minimize', onMinimize);
+  ipcMain.on('window-maximize', onMaximize);
+  ipcMain.on('window-close', onClose);
+  ipcMain.on('window-resize', onResize);
+  ipcMain.on('open-external', onOpenExternal);
   ipcMain.on('set-theme', onSetTheme);
 
   // Clean up IPC listeners when window is destroyed
@@ -150,6 +144,27 @@ function createWindow() {
     ipcMain.removeListener('window-resize', onResize);
     ipcMain.removeListener('open-external', onOpenExternal);
     ipcMain.removeListener('set-theme', onSetTheme);
+  });
+
+  // Handle Spotify OAuth callback in production.
+  win.webContents.on('will-navigate', (event, url) => {
+    try {
+      const parsed = new URL(url);
+      if (parsed.hostname === 'accounts.spotify.com') {
+        event.preventDefault();
+        shell.openExternal(url);
+        return;
+      }
+      if (parsed.pathname === '/callback' && parsed.searchParams.has('code')) {
+        if (!isDev) {
+          event.preventDefault();
+          const callbackUrl = `file://${path.join(__dirname, '..', 'dist', 'index.html')}${parsed.search}`;
+          win.loadURL(callbackUrl);
+        }
+      }
+    } catch {
+      // ignore invalid URLs
+    }
   });
 
   if (isDev) {
