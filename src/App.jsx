@@ -293,13 +293,13 @@ export default function App() {
       <svg width="0" height="0" style={{ position: 'absolute' }}>
         <defs>
           <clipPath id="album-mask" clipPathUnits="objectBoundingBox">
-            {/* 35×41 centered vertically */}
+            {/* 35x41 centered vertically */}
             <rect x="0.07317" y="0" width="0.85366" height="1" />
-            {/* 37×39 */}
+            {/* 37x39 */}
             <rect x="0.04878" y="0.02439" width="0.90244" height="0.95122" />
-            {/* 39×37 */}
+            {/* 39x37 */}
             <rect x="0.02439" y="0.04878" width="0.95122" height="0.90244" />
-            {/* 41×35 */}
+            {/* 41x35 */}
             <rect x="0" y="0.07317" width="1" height="0.85366" />
           </clipPath>
         </defs>
@@ -318,7 +318,9 @@ export default function App() {
       {/* Now playing section */}
       <div className="now-playing">
         <div className="track-info">
-          <div className="now-playing-label">now playing...</div>
+          <div className="now-playing-label">
+            {source === 'spotify' ? 'spotify' : 'now playing...'}
+          </div>
           <MarqueeText className="track-title" text={track.title} />
           <div className="track-artist">by {track.artist}</div>
         </div>
@@ -361,6 +363,7 @@ export default function App() {
       <div className="btn btn-next" onClick={next} />
 
       {/* Window control click targets */}
+      <div className="btn btn-spotify-toggle" onClick={() => setShowSpotifyPanel((v) => !v)} title="Spotify" />
       <div className="btn btn-minimize" onClick={() => window.cupid?.minimize()} />
       <div className="btn btn-window" onClick={() => window.cupid?.maximize()} />
       <div className="btn btn-exit" onClick={() => window.cupid?.close()} />
