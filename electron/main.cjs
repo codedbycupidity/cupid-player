@@ -250,6 +250,13 @@ function createWindow() {
     }
   });
 
+  // Toggle DevTools with Cmd+Shift+I / Ctrl+Shift+I
+  win.webContents.on('before-input-event', (_e, input) => {
+    if (input.type === 'keyDown' && input.key === 'I' && input.shift && (input.meta || input.control)) {
+      win.webContents.toggleDevTools({ mode: 'detach' });
+    }
+  });
+
   if (isDev) {
     win.loadURL('http://127.0.0.1:5173');
   } else {
