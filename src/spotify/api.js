@@ -10,6 +10,15 @@ import { getAccessToken } from './auth.js';
 
 const API_BASE = 'https://api.spotify.com/v1';
 
+async function fetchWithRetry(url, options, retries = 3) {
+  for (let i = 0; i <= retries; i++) {
+    const res = await fetch(url, options);
+    if (res.ok || (res.status < 500 && res.status !== 429)) return res;
+    if (i < retries) await new Promise((r) => setTimeout(r, 1000 * (i + 1)));
+  }
+  return fetch(url, options);
+}
+
 /**
  * Parse a Spotify playlist URL or URI and return the playlist ID.
  *
@@ -57,7 +66,7 @@ export async function fetchPlaylistTracks(playlistId) {
   const token = await getAccessToken();
   if (!token) throw new Error('Not authenticated with Spotify');
 
-  const res = await fetch(`${API_BASE}/playlists/${playlistId}`, {
+  const res = await fetchWithRetry(`${API_BASE}/playlists/${playlistId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -102,7 +111,7 @@ export async function fetchMyPlaylists() {
   let url = `${API_BASE}/me/playlists?limit=50`;
 
   while (url) {
-    const res = await fetch(url, {
+    const res = await fetchWithRetry(url, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -136,7 +145,7 @@ export async function fetchPlaylistInfo(playlistId) {
   const token = await getAccessToken();
   if (!token) throw new Error('Not authenticated with Spotify');
 
-  const res = await fetch(
+  const res = await fetchWithRetry(
     `${API_BASE}/playlists/${playlistId}?fields=name,images`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
