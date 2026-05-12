@@ -1,9 +1,49 @@
+require('dotenv').config();
 const { app, BrowserWindow, ipcMain, screen, shell } = require('electron');
 const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
 const path = require('node:path');
 
+const fs = require('node:fs');
+const jwt = require('jsonwebtoken');
+
 const execFileAsync = promisify(execFile);
+
+// ── Apple Music developer token ──────────────────────────
+let appleMusicToken = null;
+let appleMusicTokenExpiry = 0;
+
+function generateAppleMusicToken() {
+  if (appleMusicToken && Date.now() < appleMusicTokenExpiry) {
+    return appleMusicToken;
+  }
+
+  const teamId = process.env.APPLE_TEAM_ID;
+  const keyId = process.env.APPLE_KEY_ID;
+
+  if (!teamId || !keyId) return null;
+
+  // Find the .p8 key file in project root
+  const projectRoot = path.join(__dirname, '..');
+  const keyFiles = fs.readdirSync(projectRoot).filter((f) => f.endsWith('.p8'));
+  if (keyFiles.length === 0) return null;
+
+  const privateKey = fs.readFileSync(path.join(projectRoot, keyFiles[0]), 'utf8');
+
+  appleMusicToken = jwt.sign({}, privateKey, {
+    algorithm: 'ES256',
+    expiresIn: '180d',
+    issuer: teamId,
+    header: {
+      alg: 'ES256',
+      kid: keyId,
+    },
+  });
+
+  // Cache for 179 days
+  appleMusicTokenExpiry = Date.now() + 179 * 24 * 60 * 60 * 1000;
+  return appleMusicToken;
+}
 
 // ── yt-dlp stream URL fetcher ────────────────────────────
 // Cache stream URLs for 25 minutes (they expire after ~30min)
@@ -172,6 +212,10 @@ function createWindow() {
     win.setIcon(iconPath);
   };
 
+  ipcMain.handle('get-apple-music-token', () => {
+    return generateAppleMusicToken();
+  });
+
   ipcMain.handle('get-stream-url', async (_e, title, artist) => {
     try {
       return await getStreamUrl(title, artist);
@@ -196,6 +240,7 @@ function createWindow() {
     ipcMain.removeListener('open-external', onOpenExternal);
     ipcMain.removeListener('set-theme', onSetTheme);
     ipcMain.removeHandler('get-stream-url');
+    ipcMain.removeHandler('get-apple-music-token');
   });
 
   // Handle Spotify OAuth callback in production.

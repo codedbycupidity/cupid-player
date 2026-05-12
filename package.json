@@ -14,6 +14,8 @@
     "package": "vite build && electron-builder"
   },
   "dependencies": {
+    "dotenv": "^17.4.2",
+    "jsonwebtoken": "^9.0.3",
     "music-metadata": "^11.12.3",
     "music-metadata-browser": "^2.5.11",
     "react": "^18.3.1",
@@ -43,7 +45,9 @@
       {
         "from": "audio",
         "to": "audio",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "directories": {
