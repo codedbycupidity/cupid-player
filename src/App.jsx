@@ -3,8 +3,10 @@ import './App.css';
 import useAudioPlayer from './useAudioPlayer';
 import useSpotifyPlayer from './useSpotifyPlayer';
 import useTheme from './useTheme';
-import { login, handleCallback, isLoggedIn, logout } from './spotify/auth.js';
-import { fetchPlaylistTracks, fetchMyPlaylists } from './spotify/api.js';
+import { login as spotifyLogin, handleCallback, isLoggedIn as isSpotifyLoggedIn, logout as spotifyLogout } from './spotify/auth.js';
+import { fetchPlaylistTracks as fetchSpotifyTracks, fetchMyPlaylists as fetchSpotifyPlaylists } from './spotify/api.js';
+import { login as appleLogin, logout as appleLogout, isLoggedIn as isAppleLoggedIn, initMusicKit } from './apple/auth.js';
+import { fetchMyPlaylists as fetchApplePlaylists, fetchPlaylistTracks as fetchAppleTracks } from './apple/api.js';
 
 import progressBarStars from '../assets/progress_bar_stars.png';
 import star from '../assets/star.png';
@@ -69,17 +71,21 @@ function MarqueeText({ className, text }) {
 
 export default function App() {
   // ── Source state ─────────────────────────────────────────
-  const [source, setSource] = useState('local');
-  const [spotifyConnected, setSpotifyConnected] = useState(isLoggedIn());
-  const [spotifyTracks, setSpotifyTracks] = useState([]);
-  const [myPlaylists, setMyPlaylists] = useState([]);
+  const [source, setSource] = useState('local'); // 'local' | 'streaming'
+  const [spotifyConnected, setSpotifyConnected] = useState(isSpotifyLoggedIn());
+  const [appleConnected, setAppleConnected] = useState(isAppleLoggedIn());
+  const [streamTracks, setStreamTracks] = useState([]);
+  const [spotifyPlaylists, setSpotifyPlaylists] = useState([]);
+  const [applePlaylists, setApplePlaylists] = useState([]);
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   const [loadingPlaylist, setLoadingPlaylist] = useState(false);
-  const [spotifyError, setSpotifyError] = useState(null);
+  const [settingsError, setSettingsError] = useState(null);
+  const [musicService, setMusicService] = useState('spotify');
+  const [shuffle, setShuffle] = useState(false);
 
-  const local = useAudioPlayer();
-  const spotify = useSpotifyPlayer(spotifyTracks);
-  const player = source === 'spotify' ? spotify : local;
+  const local = useAudioPlayer(shuffle);
+  const streaming = useSpotifyPlayer(streamTracks, shuffle);
+  const player = source === 'streaming' ? streaming : local;
 
   const {
     track,
@@ -93,17 +99,27 @@ export default function App() {
     seek,
   } = player;
 
-  // ── Fetch playlists ─────────────────────────────────────
-  const loadPlaylists = useCallback(() => {
+  // ── Fetch Spotify playlists ────────────────────────────
+  const loadSpotifyPlaylists = useCallback((silent = false) => {
     setLoadingPlaylists(true);
-    setSpotifyError(null);
-    fetchMyPlaylists()
-      .then(setMyPlaylists)
-      .catch((err) => setSpotifyError(err.message))
+    if (!silent) setSettingsError(null);
+    fetchSpotifyPlaylists()
+      .then((p) => { setSpotifyPlaylists(p); setSettingsError(null); })
+      .catch((err) => { if (!silent) setSettingsError(err.message); })
       .finally(() => setLoadingPlaylists(false));
   }, []);
 
-  // ── Handle OAuth callback on mount ──────────────────────
+  // ── Fetch Apple Music playlists ────────────────────────
+  const loadApplePlaylists = useCallback(() => {
+    setLoadingPlaylists(true);
+    setSettingsError(null);
+    fetchApplePlaylists()
+      .then(setApplePlaylists)
+      .catch((err) => setSettingsError(err.message))
+      .finally(() => setLoadingPlaylists(false));
+  }, []);
+
+  // ── Handle Spotify OAuth callback on mount ─────────────
   useEffect(() => {
     async function checkCallback() {
       const params = new URLSearchParams(window.location.search);
@@ -111,31 +127,34 @@ export default function App() {
         try {
           await handleCallback();
           setSpotifyConnected(true);
-          loadPlaylists();
+          // Small delay to let token settle before fetching
+          setTimeout(() => loadSpotifyPlaylists(true), 500);
         } catch (err) {
-          setSpotifyError(err.message);
+          setSettingsError(err.message);
         }
-      } else if (isLoggedIn()) {
-        loadPlaylists();
+      } else {
+        if (isSpotifyLoggedIn()) loadSpotifyPlaylists(true);
+        if (isAppleLoggedIn()) loadApplePlaylists();
       }
     }
     checkCallback();
   }, []);
 
-  // ── Load a playlist by ID ──────────────────────────────
-  const loadPlaylist = useCallback(async (id) => {
+  // ── Load a playlist by ID (works for both services) ───
+  const loadPlaylist = useCallback(async (id, service) => {
     setLoadingPlaylist(true);
-    setSpotifyError(null);
+    setSettingsError(null);
     try {
-      const tracks = await fetchPlaylistTracks(id);
+      const fetcher = service === 'apple' ? fetchAppleTracks : fetchSpotifyTracks;
+      const tracks = await fetcher(id);
       if (tracks.length === 0) {
-        setSpotifyError('Playlist is empty');
+        setSettingsError('Playlist is empty');
         return;
       }
-      setSpotifyTracks(tracks);
-      setSource('spotify');
+      setStreamTracks(tracks);
+      setSource('streaming');
     } catch (err) {
-      setSpotifyError(err.message);
+      setSettingsError(err.message);
     } finally {
       setLoadingPlaylist(false);
     }
@@ -328,7 +347,7 @@ export default function App() {
       <div className="now-playing">
         <div className="track-info">
           <div className="now-playing-label">
-            {source === 'spotify' ? 'spotify' : 'now playing...'}
+            now playing...
           </div>
           <MarqueeText className="track-title" text={track.title} />
           <div className="track-artist">by {track.artist}</div>
@@ -398,48 +417,118 @@ export default function App() {
                 blue
               </button>
             </div>
-            <div className="settings-label">spotify</div>
-            {!spotifyConnected ? (
-              <button className="settings-theme-btn" onClick={() => login()}>
-                log in
+            <div className="settings-label">music</div>
+            <div className="settings-theme-row">
+              <button
+                className={`settings-theme-btn ${musicService === 'spotify' ? 'active' : ''}`}
+                onClick={() => setMusicService('spotify')}
+              >
+                spotify
               </button>
-            ) : (
-              <>
-                <div className="settings-playlist-list">
-                  {loadingPlaylists ? (
-                    <div className="settings-label">loading...</div>
-                  ) : (
-                    myPlaylists.map((p) => (
+              <button
+                className={`settings-theme-btn ${musicService === 'apple' ? 'active' : ''}`}
+                onClick={() => setMusicService('apple')}
+              >
+                apple
+              </button>
+              <button
+                className={`settings-theme-btn settings-shuffle ${shuffle ? 'active' : ''}`}
+                onClick={() => setShuffle((s) => !s)}
+                title="Shuffle"
+              >
+                &#8645;
+              </button>
+            </div>
+
+            {musicService === 'spotify' && (
+              !spotifyConnected ? (
+                <button className="settings-theme-btn" onClick={() => spotifyLogin()}>
+                  log in
+                </button>
+              ) : (
+                <>
+                  <div className="settings-playlist-list">
+                    {loadingPlaylists ? (
+                      <div className="settings-label">loading...</div>
+                    ) : (
+                      spotifyPlaylists.map((p) => (
+                        <button
+                          key={p.id}
+                          className={`settings-playlist-item ${loadingPlaylist ? 'disabled' : ''}`}
+                          onClick={() => loadPlaylist(p.id, 'spotify')}
+                          disabled={loadingPlaylist}
+                        >
+                          {p.name}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                  <div className="settings-theme-row">
+                    {source === 'streaming' && (
+                      <button className="settings-theme-btn" onClick={() => setSource('local')}>
+                        local
+                      </button>
+                    )}
+                    <button className="settings-theme-btn" onClick={() => {
+                      spotifyLogout();
+                      setSpotifyConnected(false);
+                      setSpotifyPlaylists([]);
+                      if (source === 'streaming') setSource('local');
+                    }}>
+                      logout
+                    </button>
+                  </div>
+                </>
+              )
+            )}
+
+            {musicService === 'apple' && (
+              !appleConnected ? (
+                <button className="settings-theme-btn" onClick={async () => {
+                  try {
+                    await appleLogin();
+                    setAppleConnected(true);
+                    loadApplePlaylists();
+                  } catch (err) {
+                    setSettingsError(err.message);
+                  }
+                }}>
+                  log in
+                </button>
+              ) : (
+                <>
+                  <div className="settings-playlist-list">
+                    {applePlaylists.map((p) => (
                       <button
                         key={p.id}
                         className={`settings-playlist-item ${loadingPlaylist ? 'disabled' : ''}`}
-                        onClick={() => loadPlaylist(p.id)}
+                        onClick={() => loadPlaylist(p.id, 'apple')}
                         disabled={loadingPlaylist}
                       >
                         {p.name}
                       </button>
-                    ))
-                  )}
-                </div>
-                <div className="settings-theme-row">
-                  {source === 'spotify' && (
-                    <button className="settings-theme-btn" onClick={() => setSource('local')}>
-                      local
+                    ))}
+                  </div>
+                  <div className="settings-theme-row">
+                    {source === 'streaming' && (
+                      <button className="settings-theme-btn" onClick={() => setSource('local')}>
+                        local
+                      </button>
+                    )}
+                    <button className="settings-theme-btn" onClick={() => {
+                      appleLogout();
+                      setAppleConnected(false);
+                      setApplePlaylists([]);
+                      if (source === 'streaming') setSource('local');
+                    }}>
+                      logout
                     </button>
-                  )}
-                  <button className="settings-theme-btn" onClick={() => {
-                    logout();
-                    setSpotifyConnected(false);
-                    setSpotifyTracks([]);
-                    setMyPlaylists([]);
-                    if (source === 'spotify') setSource('local');
-                  }}>
-                    logout
-                  </button>
-                </div>
-                {spotifyError && <div className="settings-error">{spotifyError}</div>}
-              </>
+                  </div>
+                </>
+              )
             )}
+
+            {settingsError && <div className="settings-error">{settingsError}</div>}
           </div>
         </div>
       )}
