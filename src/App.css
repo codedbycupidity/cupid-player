@@ -4,6 +4,7 @@
   height: 100vh;
   overflow: hidden;
   border-radius: calc(5 / 306 * 100vw); /* match frame's pixel-art rounded corners */
+  clip-path: inset(0 0 0 calc(3 / 306 * 100vw));
 }
 
 .layer {
@@ -26,6 +27,18 @@
   pointer-events: auto;
   cursor: pointer;
   -webkit-app-region: no-drag;
+}
+
+.window-title {
+  position: absolute;
+  left: calc((134 - 110) / 306 * 100vw);
+  top: calc((50 - 23) / 306 * 100vw);
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(20 / 306 * 100vw);
+  color: #78364F;
+  z-index: 50;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* Invisible drag region for moving the frameless window */
@@ -83,6 +96,24 @@
   top: calc((48 - 23) / 306 * 100vw);
 }
 
+.btn-theme {
+  left: calc((305 - 110) / 306 * 100vw);
+  top: calc((48 - 23) / 306 * 100vw);
+}
+
+/* Progress bar seek target */
+.progress-seek {
+  position: absolute;
+  left: calc((140 - 110) / 306 * 100vw);
+  top: calc((469 - 23) / 306 * 100vw);
+  width: calc(241 / 306 * 100vw);
+  height: calc(6 / 306 * 100vw);
+  z-index: 150;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+
 /* Playback control click targets */
 .btn-prev {
   left: calc((167 - 110) / 306 * 100vw);
@@ -117,9 +148,47 @@
   pointer-events: none;
 }
 
+.record-player {
+  position: absolute;
+  width: calc(200 / 306 * 100vw);
+  left: 50%;
+  top: calc(120 / 306 * 100vw);
+  transform: translateX(-50%);
+  image-rendering: pixelated;
+  pointer-events: none;
+  user-select: none;
+  z-index: 10;
+}
+
+.frame-overlay {
+  z-index: 15;
+}
+
+.layer-ui {
+  z-index: 20;
+}
+
+.record-slide-out {
+  animation: slide-out 0.6s ease-in forwards;
+}
+
+.record-slide-in {
+  animation: slide-in 0.6s ease-out forwards;
+}
+
+@keyframes slide-out {
+  0% { transform: translate(-50%, 0); }
+  100% { transform: translate(calc(-50% - 60vw), 20vw); }
+}
+
+@keyframes slide-in {
+  0% { transform: translate(calc(-50% - 60vw), 20vw); }
+  100% { transform: translate(-50%, 0); }
+}
+
 .album-frame-layer {
-  left: calc(-35.95vw + 24 / 306 * 100vw);
-  top: calc(-23 / 306 * 100vw + 3 / 306 * 100vw);
+  left: calc(-35.95vw - 1 / 306 * 100vw);
+  top: calc(-23 / 306 * 100vw);
   z-index: 45;
 }
 
@@ -159,8 +228,28 @@
   color: #5a3a4a;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: calc(200 / 306 * 100vw);
+  max-width: calc(170 / 306 * 100vw);
+}
+
+.marquee-measure {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.marquee-scroll {
+  display: inline-block;
+  animation: marquee 8s linear infinite;
+}
+
+.marquee-gap {
+  margin-left: calc(28 / 306 * 100vw);
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 .track-artist {
