@@ -37,6 +37,21 @@ Drop MP3 files into the `audio/` directory. The player will pick them up automat
 npm run package
 ```
 
+The built app will be in `out/mac-arm64/Cupid Player.app` (macOS) or `out/` for other platforms.
+
+### Install as Desktop App
+
+**macOS:**
+```bash
+cp -r "out/mac-arm64/Cupid Player.app" /Applications/
+```
+
+**Windows:** Run the installer from `out/Cupid Player Setup.exe`.
+
+**Linux:** Run the AppImage from `out/`.
+
+> Note: The macOS build is unsigned. On first launch you may need to right-click > Open, or go to System Settings > Privacy & Security to allow it.
+
 ## Tech
 
 - Electron + Vite + React

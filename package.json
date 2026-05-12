@@ -36,13 +36,31 @@
     "productName": "Cupid Player",
     "files": [
       "dist/**/*",
-      "electron/**/*"
+      "electron/**/*",
+      "assets/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "audio",
+        "to": "audio",
+        "filter": ["**/*"]
+      }
     ],
     "directories": {
       "output": "out"
     },
     "mac": {
-      "category": "public.app-category.music"
+      "target": "dir",
+      "category": "public.app-category.music",
+      "icon": "assets/pink/icon.png"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/pink/icon.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/pink/icon.png"
     }
   }
 }
