@@ -22,7 +22,7 @@ export async function fetchMyPlaylists() {
     id: p.id,
     name: p.attributes.name,
     image: p.attributes.artwork
-      ? mk.formatArtworkURL(p.attributes.artwork, 300, 300)
+      ? window.MusicKit.formatArtworkURL(p.attributes.artwork, 300, 300)
       : null,
     trackCount: p.attributes.trackCount || 0,
   }));
@@ -47,7 +47,7 @@ export async function fetchPlaylistTracks(playlistId) {
       title: t.attributes.name,
       artist: t.attributes.artistName,
       art: t.attributes.artwork
-        ? mk.formatArtworkURL(t.attributes.artwork, 300, 300)
+        ? window.MusicKit.formatArtworkURL(t.attributes.artwork, 300, 300)
         : null,
       uri: `apple:track:${t.id}`,
     }));
