@@ -250,9 +250,11 @@ function createWindow() {
     }
   });
 
-  // Toggle DevTools with Cmd+Shift+I / Ctrl+Shift+I
+  // Toggle DevTools with Cmd+Shift+I / Ctrl+Shift+I / F12
   win.webContents.on('before-input-event', (_e, input) => {
-    if (input.type === 'keyDown' && input.key === 'I' && input.shift && (input.meta || input.control)) {
+    if (input.type !== 'keyDown') return;
+    const isDevToolsShortcut = input.key.toLowerCase() === 'i' && input.shift && (input.meta || input.control);
+    if (isDevToolsShortcut || input.key === 'F12') {
       win.webContents.toggleDevTools({ mode: 'detach' });
     }
   });

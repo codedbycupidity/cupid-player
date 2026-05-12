@@ -66,7 +66,7 @@ export async function fetchPlaylistTracks(playlistId) {
   const token = await getAccessToken();
   if (!token) throw new Error('Not authenticated with Spotify');
 
-  const res = await fetchWithRetry(`${API_BASE}/playlists/${playlistId}`, {
+  const res = await fetchWithRetry(`${API_BASE}/playlists/${playlistId}?market=from_token`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -93,6 +93,29 @@ export async function fetchPlaylistTracks(playlistId) {
       art: t.album?.images?.[0]?.url ?? null,
       uri: t.uri,
     });
+  }
+
+  // Fill in missing album art via search (local files, etc.)
+  const missing = tracks.filter((t) => !t.art);
+  if (missing.length > 0) {
+    await Promise.all(missing.map(async (t) => {
+      try {
+        const q = encodeURIComponent(`${t.title} ${t.artist}`);
+        const searchRes = await fetchWithRetry(
+          `${API_BASE}/search?q=${q}&type=track&limit=1&market=from_token`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (searchRes.ok) {
+          const searchData = await searchRes.json();
+          const found = searchData.tracks?.items?.[0];
+          if (found?.album?.images?.[0]?.url) {
+            t.art = found.album.images[0].url;
+          }
+        }
+      } catch {
+        // ignore — just won't have art
+      }
+    }));
   }
 
   return tracks;
