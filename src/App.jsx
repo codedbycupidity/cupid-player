@@ -4,7 +4,7 @@ import useAudioPlayer from './useAudioPlayer';
 import useSpotifyPlayer from './useSpotifyPlayer';
 import useTheme from './useTheme';
 import { login, handleCallback, isLoggedIn, logout } from './spotify/auth.js';
-import { parsePlaylistUrl, fetchPlaylistTracks } from './spotify/api.js';
+import { fetchPlaylistTracks, fetchMyPlaylists } from './spotify/api.js';
 
 import progressBarStars from '../assets/progress_bar_stars.png';
 import star from '../assets/star.png';
@@ -72,7 +72,8 @@ export default function App() {
   const [source, setSource] = useState('local');
   const [spotifyConnected, setSpotifyConnected] = useState(isLoggedIn());
   const [spotifyTracks, setSpotifyTracks] = useState([]);
-  const [playlistUrl, setPlaylistUrl] = useState('');
+  const [myPlaylists, setMyPlaylists] = useState([]);
+  const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   const [loadingPlaylist, setLoadingPlaylist] = useState(false);
   const [spotifyError, setSpotifyError] = useState(null);
 
@@ -92,6 +93,16 @@ export default function App() {
     seek,
   } = player;
 
+  // ── Fetch playlists ─────────────────────────────────────
+  const loadPlaylists = useCallback(() => {
+    setLoadingPlaylists(true);
+    setSpotifyError(null);
+    fetchMyPlaylists()
+      .then(setMyPlaylists)
+      .catch((err) => setSpotifyError(err.message))
+      .finally(() => setLoadingPlaylists(false));
+  }, []);
+
   // ── Handle OAuth callback on mount ──────────────────────
   useEffect(() => {
     async function checkCallback() {
@@ -100,21 +111,19 @@ export default function App() {
         try {
           await handleCallback();
           setSpotifyConnected(true);
+          loadPlaylists();
         } catch (err) {
           setSpotifyError(err.message);
         }
+      } else if (isLoggedIn()) {
+        loadPlaylists();
       }
     }
     checkCallback();
   }, []);
 
-  // ── Spotify playlist loading ────────────────────────────
-  const loadSpotifyPlaylist = useCallback(async () => {
-    const id = parsePlaylistUrl(playlistUrl);
-    if (!id) {
-      setSpotifyError('Invalid Spotify playlist URL');
-      return;
-    }
+  // ── Load a playlist by ID ──────────────────────────────
+  const loadPlaylist = useCallback(async (id) => {
     setLoadingPlaylist(true);
     setSpotifyError(null);
     try {
@@ -130,7 +139,7 @@ export default function App() {
     } finally {
       setLoadingPlaylist(false);
     }
-  }, [playlistUrl]);
+  }, []);
 
   const { theme, toggleTheme, assets } = useTheme();
 
@@ -363,7 +372,6 @@ export default function App() {
       <div className="btn btn-next" onClick={next} />
 
       {/* Window control click targets */}
-      <div className="btn btn-spotify-toggle" onClick={() => setShowSpotifyPanel((v) => !v)} title="Spotify" />
       <div className="btn btn-minimize" onClick={() => window.cupid?.minimize()} />
       <div className="btn btn-window" onClick={() => window.cupid?.maximize()} />
       <div className="btn btn-exit" onClick={() => window.cupid?.close()} />
@@ -397,22 +405,23 @@ export default function App() {
               </button>
             ) : (
               <>
-                <input
-                  className="settings-input"
-                  type="text"
-                  placeholder="paste playlist url..."
-                  value={playlistUrl}
-                  onChange={(e) => setPlaylistUrl(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && loadSpotifyPlaylist()}
-                />
+                <div className="settings-playlist-list">
+                  {loadingPlaylists ? (
+                    <div className="settings-label">loading...</div>
+                  ) : (
+                    myPlaylists.map((p) => (
+                      <button
+                        key={p.id}
+                        className={`settings-playlist-item ${loadingPlaylist ? 'disabled' : ''}`}
+                        onClick={() => loadPlaylist(p.id)}
+                        disabled={loadingPlaylist}
+                      >
+                        {p.name}
+                      </button>
+                    ))
+                  )}
+                </div>
                 <div className="settings-theme-row">
-                  <button
-                    className="settings-theme-btn"
-                    onClick={loadSpotifyPlaylist}
-                    disabled={loadingPlaylist}
-                  >
-                    {loadingPlaylist ? '...' : 'load'}
-                  </button>
                   {source === 'spotify' && (
                     <button className="settings-theme-btn" onClick={() => setSource('local')}>
                       local
@@ -422,6 +431,7 @@ export default function App() {
                     logout();
                     setSpotifyConnected(false);
                     setSpotifyTracks([]);
+                    setMyPlaylists([]);
                     if (source === 'spotify') setSource('local');
                   }}>
                     logout
