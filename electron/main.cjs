@@ -18,6 +18,7 @@ function createWindow() {
     transparent: true,
     backgroundColor: '#00000000',
     hasShadow: false,
+    icon: path.join(__dirname, '..', 'assets', 'pink', 'favicon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
@@ -59,16 +60,12 @@ function createWindow() {
     if (win.isDestroyed()) return;
     const bounds = win.getBounds();
 
-    // Determine which axis contributes the most movement
-    // and compute a single scale delta to maintain aspect ratio
     const isRight = corner.includes('right');
     const isBottom = corner.includes('bottom');
 
-    // Flip signs so that dragging "outward" from the corner is always positive
     const effectiveDx = isRight ? dx : -dx;
     const effectiveDy = isBottom ? dy : -dy;
 
-    // Use whichever axis moved more
     let delta;
     if (Math.abs(effectiveDx) > Math.abs(effectiveDy)) {
       delta = effectiveDx;
@@ -78,7 +75,6 @@ function createWindow() {
 
     const dw = Math.round(delta);
     const newWidth = bounds.width + dw;
-    // Always derive height from width to keep perfect aspect ratio
     const newHeight = Math.round(newWidth / ASPECT);
     const dh = newHeight - bounds.height;
 
@@ -96,8 +92,6 @@ function createWindow() {
 
   const onOpenExternal = (_e, url) => {
     if (typeof url === 'string' && url.startsWith('https://')) {
-      // Spotify auth URLs: open in a child window so the callback
-      // stays within Electron (same localStorage / session).
       if (url.includes('accounts.spotify.com/authorize')) {
         const authWin = new BrowserWindow({
           width: 500,
@@ -108,27 +102,31 @@ function createWindow() {
           webPreferences: { nodeIntegration: false, contextIsolation: true },
         });
         authWin.loadURL(url);
-
-        // When Spotify redirects back to our callback URL, grab it,
-        // load it in the main window, and close the auth popup.
-        authWin.webContents.on('will-redirect', (event, redirectUrl) => {
-          if (redirectUrl.startsWith('http://127.0.0.1:5173/callback')) {
+        const handleAuthRedirect = (event, callbackUrl) => {
+          if (callbackUrl.startsWith('http://127.0.0.1:5173/callback')) {
             event.preventDefault();
-            win.loadURL(redirectUrl);
+            const url = new URL(callbackUrl);
+            const devUrl = isDev
+              ? `http://127.0.0.1:5173/${url.search}`
+              : callbackUrl;
+            win.loadURL(devUrl);
             authWin.close();
           }
-        });
-        authWin.webContents.on('will-navigate', (event, navUrl) => {
-          if (navUrl.startsWith('http://127.0.0.1:5173/callback')) {
-            event.preventDefault();
-            win.loadURL(navUrl);
-            authWin.close();
-          }
-        });
+        };
+        authWin.webContents.on('will-redirect', handleAuthRedirect);
+        authWin.webContents.on('will-navigate', handleAuthRedirect);
         return;
       }
       shell.openExternal(url);
     }
+  };
+
+  const onSetTheme = (_e, theme) => {
+    const iconPath = path.join(__dirname, '..', 'assets', theme, 'favicon.png');
+    if (process.platform === 'darwin' && app.dock) {
+      app.dock.setIcon(iconPath);
+    }
+    win.setIcon(iconPath);
   };
 
   ipcMain.on('window-minimize', onMinimize);
@@ -136,6 +134,7 @@ function createWindow() {
   ipcMain.on('window-close', onClose);
   ipcMain.on('window-resize', onResize);
   ipcMain.on('open-external', onOpenExternal);
+  ipcMain.on('set-theme', onSetTheme);
 
   // Clean up IPC listeners when window is destroyed
   win.on('closed', () => {
@@ -144,13 +143,10 @@ function createWindow() {
     ipcMain.removeListener('window-close', onClose);
     ipcMain.removeListener('window-resize', onResize);
     ipcMain.removeListener('open-external', onOpenExternal);
+    ipcMain.removeListener('set-theme', onSetTheme);
   });
 
-  // Handle Spotify OAuth callback.
-  // The auth flow opens in the system browser, which redirects back to
-  // http://127.0.0.1:5173/callback?code=... — in dev mode Vite serves the
-  // SPA there, and the renderer's useEffect picks up the code param.
-  // We also intercept any in-window navigation as a safety net.
+  // Handle Spotify OAuth callback in production.
   win.webContents.on('will-navigate', (event, url) => {
     try {
       const parsed = new URL(url);
@@ -180,6 +176,9 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  if (process.platform === 'darwin' && app.dock) {
+    app.dock.setIcon(path.join(__dirname, '..', 'assets', 'pink', 'favicon.png'));
+  }
   createWindow();
 
   app.on('activate', () => {
