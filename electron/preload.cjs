@@ -9,4 +9,5 @@ contextBridge.exposeInMainWorld('cupid', {
   openExternal: (url) => ipcRenderer.send('open-external', url),
   setTheme: (theme) => ipcRenderer.send('set-theme', theme),
   getStreamUrl: (title, artist) => ipcRenderer.invoke('get-stream-url', title, artist),
+  getAppleMusicToken: () => ipcRenderer.invoke('get-apple-music-token'),
 });

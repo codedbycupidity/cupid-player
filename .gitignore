@@ -1,4 +1,6 @@
 .claude/
+*.p8
+.env
 node_modules/
 dist/
 dist-electron/
