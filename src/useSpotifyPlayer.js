@@ -1,35 +1,24 @@
 /**
- * React hook for Spotify Web Playback SDK
+ * React hook for Spotify playback via yt-dlp audio streams.
  *
- * Exposes the same interface as useAudioPlayer so the UI can
- * drive either source without caring which is active.
+ * Uses Spotify API for metadata/playlists, then fetches audio
+ * from YouTube via yt-dlp in the main process. Plays via HTML5 Audio.
+ *
+ * Exposes the same interface as useAudioPlayer.
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  initPlayer,
-  disconnectPlayer,
-  playTracks,
-  resume,
-  pause as sdkPause,
-  seek as sdkSeek,
-  nextTrack,
-  previousTrack,
-  getCurrentState,
-} from './spotify/player.js';
-import { getAccessToken } from './spotify/auth.js';
 
 export default function useSpotifyPlayer(tracks) {
+  const audioRef = useRef(new Audio());
   const [trackIndex, setTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [ready, setReady] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const pollRef = useRef(null);
-  const tracksRef = useRef(tracks);
-  tracksRef.current = tracks;
+  const audio = audioRef.current;
 
   const track = tracks[trackIndex] ?? {
     title: 'No track',
@@ -38,119 +27,106 @@ export default function useSpotifyPlayer(tracks) {
     uri: null,
   };
 
-  // ── Initialise SDK player ──────────────────────────────────
-
+  // ── Load track via yt-dlp when index or tracks change ─────
   useEffect(() => {
+    if (tracks.length === 0) return;
+    const t = tracks[trackIndex];
+    if (!t) return;
+
     let cancelled = false;
+    setLoading(true);
 
-    async function init() {
-      const token = await getAccessToken();
-      if (!token || cancelled) return;
-
-      await initPlayer(token, {
-        onStateChange: (state) => {
-          if (!state || cancelled) return;
-
-          const { paused, position, duration: dur, track_window } = state;
-
-          setIsPlaying(!paused);
-          setCurrentTime(position / 1000);
-          setDuration(dur / 1000);
-          setProgress(dur > 0 ? position / dur : 0);
-
-          // Sync track index if the SDK moved to a different track
-          if (track_window?.current_track) {
-            const sdkUri = track_window.current_track.uri;
-            const idx = tracksRef.current.findIndex((t) => t.uri === sdkUri);
-            if (idx !== -1) {
-              setTrackIndex(idx);
-            }
-          }
-        },
-        onReady: () => {
-          if (!cancelled) setReady(true);
-        },
-        onTokenRefresh: () => getAccessToken(),
-      });
+    async function loadStream() {
+      try {
+        const url = await window.cupid.getStreamUrl(t.title, t.artist);
+        if (cancelled) return;
+        audio.src = url;
+        audio.load();
+        if (isPlaying) {
+          audio.play().catch(() => {});
+        }
+      } catch (err) {
+        console.error('[yt-dlp] Failed to get stream:', err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
 
-    init();
+    loadStream();
+
+    return () => { cancelled = true; };
+  }, [trackIndex, tracks]);
+
+  // ── Prefetch next track ───────────────────────────────────
+  useEffect(() => {
+    if (tracks.length === 0) return;
+    const nextIdx = (trackIndex + 1) % tracks.length;
+    const nextTrack = tracks[nextIdx];
+    if (nextTrack) {
+      // Fire and forget — just warms the cache in main process
+      window.cupid.getStreamUrl(nextTrack.title, nextTrack.artist).catch(() => {});
+    }
+  }, [trackIndex, tracks]);
+
+  // ── Audio event listeners ─────────────────────────────────
+  useEffect(() => {
+    const onTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+      if (audio.duration) {
+        setProgress(audio.currentTime / audio.duration);
+      }
+    };
+
+    const onLoadedMetadata = () => {
+      setDuration(audio.duration);
+    };
+
+    const onEnded = () => {
+      setTrackIndex((prev) => (prev + 1) % tracks.length);
+    };
+
+    audio.addEventListener('timeupdate', onTimeUpdate);
+    audio.addEventListener('loadedmetadata', onLoadedMetadata);
+    audio.addEventListener('ended', onEnded);
 
     return () => {
-      cancelled = true;
-      disconnectPlayer();
-      setReady(false);
+      audio.removeEventListener('timeupdate', onTimeUpdate);
+      audio.removeEventListener('loadedmetadata', onLoadedMetadata);
+      audio.removeEventListener('ended', onEnded);
     };
-  }, []);
+  }, [tracks.length]);
 
-  // ── Poll progress while playing ────────────────────────────
+  // ── Playback controls ────────────────────────────────────
 
-  useEffect(() => {
+  const togglePlay = useCallback(() => {
     if (isPlaying) {
-      pollRef.current = setInterval(async () => {
-        const state = await getCurrentState();
-        if (state) {
-          const pos = state.position / 1000;
-          const dur = state.duration / 1000;
-          setCurrentTime(pos);
-          setDuration(dur);
-          setProgress(dur > 0 ? state.position / state.duration : 0);
-        }
-      }, 500);
+      audio.pause();
+      setIsPlaying(false);
     } else {
-      clearInterval(pollRef.current);
+      audio.play().catch(() => {});
+      setIsPlaying(true);
     }
-
-    return () => clearInterval(pollRef.current);
   }, [isPlaying]);
 
-  // ── Playback controls ──────────────────────────────────────
+  const next = useCallback(() => {
+    setTrackIndex((prev) => (prev + 1) % tracks.length);
+    setIsPlaying(true);
+  }, [tracks.length]);
 
-  const startPlayback = useCallback(
-    async (index) => {
-      const token = await getAccessToken();
-      if (!token || !tracks.length) return;
-      const uris = tracks.map((t) => t.uri);
-      await playTracks(token, uris, index ?? trackIndex);
-    },
-    [tracks, trackIndex],
-  );
-
-  const togglePlay = useCallback(async () => {
-    if (isPlaying) {
-      await sdkPause();
+  const prev = useCallback(() => {
+    if (audio.currentTime > 3) {
+      audio.currentTime = 0;
     } else {
-      // If we haven't started playback yet, kick it off
-      const state = await getCurrentState();
-      if (!state) {
-        await startPlayback(trackIndex);
-      } else {
-        await resume();
-      }
+      setTrackIndex((prev) => (prev - 1 + tracks.length) % tracks.length);
     }
-  }, [isPlaying, startPlayback, trackIndex]);
+    setIsPlaying(true);
+  }, [tracks.length]);
 
-  const next = useCallback(async () => {
-    await nextTrack();
+  const seek = useCallback((fraction) => {
+    if (audio.duration) {
+      audio.currentTime = Math.min(fraction, 1) * audio.duration;
+    }
   }, []);
-
-  const prev = useCallback(async () => {
-    // If more than 3 seconds in, restart; otherwise go to previous
-    if (currentTime > 3) {
-      await sdkSeek(0);
-    } else {
-      await previousTrack();
-    }
-  }, [currentTime]);
-
-  const seek = useCallback(
-    async (fraction) => {
-      if (duration > 0) {
-        await sdkSeek(Math.round(fraction * duration * 1000));
-      }
-    },
-    [duration],
-  );
 
   return {
     track,
@@ -163,7 +139,6 @@ export default function useSpotifyPlayer(tracks) {
     next,
     prev,
     seek,
-    ready,
-    startPlayback,
+    loading,
   };
 }

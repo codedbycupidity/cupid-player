@@ -1,5 +1,48 @@
 const { app, BrowserWindow, ipcMain, screen, shell } = require('electron');
+const { execFile } = require('node:child_process');
+const { promisify } = require('node:util');
 const path = require('node:path');
+
+const execFileAsync = promisify(execFile);
+
+// ── yt-dlp stream URL fetcher ────────────────────────────
+// Cache stream URLs for 25 minutes (they expire after ~30min)
+const streamCache = new Map();
+const CACHE_TTL = 25 * 60 * 1000;
+
+function getYtDlpPath() {
+  // Use bundled yt-dlp from node_modules, fall back to system
+  try {
+    return require('yt-dlp-exec').raw.ytDlpPath || 'yt-dlp';
+  } catch {
+    return 'yt-dlp';
+  }
+}
+
+async function getStreamUrl(title, artist) {
+  const cacheKey = `${title}::${artist}`;
+  const cached = streamCache.get(cacheKey);
+  if (cached && Date.now() - cached.time < CACHE_TTL) {
+    return cached.url;
+  }
+
+  const query = `ytsearch1:"${title}" ${artist}`;
+  const ytDlp = getYtDlpPath();
+
+  const { stdout } = await execFileAsync(ytDlp, [
+    query,
+    '-f', 'bestaudio[ext=m4a]/bestaudio',
+    '--no-playlist',
+    '--no-warnings',
+    '-g', // print URL only
+  ], { timeout: 15000 });
+
+  const url = stdout.trim();
+  if (!url) throw new Error('No stream URL found');
+
+  streamCache.set(cacheKey, { url, time: Date.now() });
+  return url;
+}
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -129,6 +172,14 @@ function createWindow() {
     win.setIcon(iconPath);
   };
 
+  ipcMain.handle('get-stream-url', async (_e, title, artist) => {
+    try {
+      return await getStreamUrl(title, artist);
+    } catch (err) {
+      throw new Error(`Failed to get stream: ${err.message}`);
+    }
+  });
+
   ipcMain.on('window-minimize', onMinimize);
   ipcMain.on('window-maximize', onMaximize);
   ipcMain.on('window-close', onClose);
@@ -144,6 +195,7 @@ function createWindow() {
     ipcMain.removeListener('window-resize', onResize);
     ipcMain.removeListener('open-external', onOpenExternal);
     ipcMain.removeListener('set-theme', onSetTheme);
+    ipcMain.removeHandler('get-stream-url');
   });
 
   // Handle Spotify OAuth callback in production.
@@ -169,7 +221,6 @@ function createWindow() {
 
   if (isDev) {
     win.loadURL('http://127.0.0.1:5173');
-    win.webContents.openDevTools({ mode: 'detach' });
   } else {
     win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
   }
