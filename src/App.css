@@ -216,6 +216,24 @@
   border-bottom-right-radius: calc(5 / 306 * 100vw);
 }
 
+/* ── Theme toggle button ────────────────────────────────── */
+.btn-theme-toggle {
+  left: calc((287 - 110) / 306 * 100vw);
+  top: calc((48 - 23) / 306 * 100vw);
+  width: calc(16 / 306 * 100vw);
+  height: calc(16 / 306 * 100vw);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f4a4c4 50%, #a4c4f4 50%);
+  opacity: 0.7;
+  transition: opacity 0.15s, transform 0.15s;
+  image-rendering: pixelated;
+}
+
+.btn-theme-toggle:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
 /* ── Spotify panel ───────────────────────────────────────── */
 
 /* Small toggle button positioned near the window controls */

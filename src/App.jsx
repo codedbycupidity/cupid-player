@@ -2,22 +2,14 @@ import { useState, useCallback, useEffect } from 'react';
 import './App.css';
 import useAudioPlayer from './useAudioPlayer';
 import useSpotifyPlayer from './useSpotifyPlayer';
+import useTheme from './useTheme';
 import { login, handleCallback, isLoggedIn, logout } from './spotify/auth.js';
 import { parsePlaylistUrl, fetchPlaylistTracks } from './spotify/api.js';
 
-import frame from '../assets/frame.png';
-import plant from '../assets/plant.png';
+// Shared assets (not theme-specific)
 import progressBar from '../assets/progress_bar.png';
 import progressBarStars from '../assets/progress_bar_stars.png';
 import starDefault from '../assets/star_selected.png';
-import backwardsButton from '../assets/backwards_button.png';
-import pauseButton from '../assets/pause_button.png';
-import playButton from '../assets/play_button.png';
-import forwardsButton from '../assets/forwards_button.png';
-import exitButton from '../assets/exit_button.png';
-import minimizerButton from '../assets/minimizer_button.png';
-import windowButton from '../assets/window_button.png';
-import albumFrame from '../assets/album_frame.png';
 
 function useResize(corner) {
   const onMouseDown = useCallback((e) => {
@@ -53,6 +45,9 @@ function formatTime(seconds) {
 }
 
 export default function App() {
+  // ── Theme ───────────────────────────────────────────────
+  const { theme, toggleTheme, assets } = useTheme();
+
   // ── Source state ─────────────────────────────────────────
   const [source, setSource] = useState('local'); // 'local' | 'spotify'
   const [spotifyConnected, setSpotifyConnected] = useState(isLoggedIn());
@@ -149,10 +144,10 @@ export default function App() {
   return (
     <div className="player">
       {/* Base frame */}
-      <img src={frame} className="layer" alt="" draggable={false} />
+      <img src={assets.frame} className="layer" alt="" draggable={false} />
 
       {/* Decorative */}
-      <img src={plant} className="layer" alt="" draggable={false} />
+      <img src={assets.plant} className="layer" alt="" draggable={false} />
 
       {/* Progress bar layers */}
       <img src={progressBar} className="layer" alt="" draggable={false} />
@@ -160,14 +155,14 @@ export default function App() {
       <img src={starDefault} className="layer" alt="" draggable={false} />
 
       {/* Playback control layers (visual only) */}
-      <img src={backwardsButton} className="layer" alt="" draggable={false} />
-      <img src={isPlaying ? pauseButton : playButton} className="layer" alt="" draggable={false} />
-      <img src={forwardsButton} className="layer" alt="" draggable={false} />
+      <img src={assets.backwardsButton} className="layer" alt="" draggable={false} />
+      <img src={isPlaying ? assets.pauseButton : assets.playButton} className="layer" alt="" draggable={false} />
+      <img src={assets.forwardsButton} className="layer" alt="" draggable={false} />
 
       {/* Window control layers (visual only) */}
-      <img src={minimizerButton} className="layer" alt="" draggable={false} />
-      <img src={windowButton} className="layer" alt="" draggable={false} />
-      <img src={exitButton} className="layer" alt="" draggable={false} />
+      <img src={assets.minimizerButton} className="layer" alt="" draggable={false} />
+      <img src={assets.windowButton} className="layer" alt="" draggable={false} />
+      <img src={assets.exitButton} className="layer" alt="" draggable={false} />
 
       {/* SVG clip-path for pixel-art album mask */}
       <svg width="0" height="0" style={{ position: 'absolute' }}>
@@ -193,7 +188,7 @@ export default function App() {
       )}
 
       {/* Album frame overlay */}
-      <img src={albumFrame} className="layer album-frame-layer" alt="" draggable={false} />
+      <img src={assets.albumFrame} className="layer album-frame-layer" alt="" draggable={false} />
 
       {/* Now playing section */}
       <div className="now-playing">
@@ -273,6 +268,9 @@ export default function App() {
       <div className="btn btn-prev" onClick={prev} />
       <div className="btn btn-play" onClick={togglePlay} />
       <div className="btn btn-next" onClick={next} />
+
+      {/* Theme toggle */}
+      <div className="btn btn-theme-toggle" onClick={toggleTheme} title={`Switch to ${theme === 'pink' ? 'blue' : 'pink'} theme`} />
 
       {/* Window control click targets */}
       <div className="btn btn-spotify-toggle" onClick={() => setShowSpotifyPanel((v) => !v)} title="Spotify" />
