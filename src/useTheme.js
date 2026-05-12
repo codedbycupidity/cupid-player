@@ -14,7 +14,10 @@ import pinkExitButton from '../assets/pink/exit_button.png';
 import pinkMinimizerButton from '../assets/pink/minimizer_button.png';
 import pinkWindowButton from '../assets/pink/window_button.png';
 import pinkFavicon from '../assets/pink/favicon.png';
-// ── Shared animation assets ─────────────────────────────
+import pinkProgressBar from '../assets/pink/progress_bar.png';
+import pinkSettings from '../assets/pink/settings.png';
+
+// ── Shared record animations ────────────────────────────
 import recordA1 from '../assets/animations/record-pink/frame-1.png';
 import recordA2 from '../assets/animations/record-pink/frame-2.png';
 import recordA3 from '../assets/animations/record-pink/frame-3.png';
@@ -23,18 +26,26 @@ import recordB1 from '../assets/animations/record-blue/frame-1.png';
 import recordB2 from '../assets/animations/record-blue/frame-2.png';
 import recordB3 from '../assets/animations/record-blue/frame-3.png';
 import recordB4 from '../assets/animations/record-blue/frame-4.png';
-import needlePlay1 from '../assets/animations/needle-playing/frame-1.png';
-import needlePlay2 from '../assets/animations/needle-playing/frame-2.png';
-import needlePlay3 from '../assets/animations/needle-playing/frame-3.png';
-import needleChange1 from '../assets/animations/needle-change/frame-1.png';
-import needleChange2 from '../assets/animations/needle-change/frame-2.png';
-import needleChange3 from '../assets/animations/needle-change/frame-3.png';
 
-const SHARED_ANIMATIONS = {
+// ── Pink needle animations ──────────────────────────────
+import pinkNeedlePlay1 from '../assets/animations/pink/needle-playing/frame-1.png';
+import pinkNeedlePlay2 from '../assets/animations/pink/needle-playing/frame-2.png';
+import pinkNeedlePlay3 from '../assets/animations/pink/needle-playing/frame-3.png';
+import pinkNeedleChange1 from '../assets/animations/pink/needle-change/frame-1.png';
+import pinkNeedleChange2 from '../assets/animations/pink/needle-change/frame-2.png';
+import pinkNeedleChange3 from '../assets/animations/pink/needle-change/frame-3.png';
+
+// ── Blue needle animations ──────────────────────────────
+import blueNeedlePlay1 from '../assets/animations/blue/needle-playing/frame-1.png';
+import blueNeedlePlay2 from '../assets/animations/blue/needle-playing/frame-2.png';
+import blueNeedlePlay3 from '../assets/animations/blue/needle-playing/frame-3.png';
+import blueNeedleChange1 from '../assets/animations/blue/needle-change/frame-1.png';
+import blueNeedleChange2 from '../assets/animations/blue/needle-change/frame-2.png';
+import blueNeedleChange3 from '../assets/animations/blue/needle-change/frame-3.png';
+
+const SHARED_RECORD_FRAMES = {
   recordFramesA: [recordA1, recordA2, recordA3, recordA4],
   recordFramesB: [recordB1, recordB2, recordB3, recordB4],
-  needlePlayFrames: [needlePlay1, needlePlay2, needlePlay3],
-  needleChangeFrames: [needleChange1, needleChange2, needleChange3],
 };
 
 // ── Blue theme assets ────────────────────────────────────
@@ -51,6 +62,8 @@ import blueExitButton from '../assets/blue/exit_button.png';
 import blueMinimizerButton from '../assets/blue/minimizer_button.png';
 import blueWindowButton from '../assets/blue/window_button.png';
 import blueFavicon from '../assets/blue/favicon.png';
+import blueProgressBar from '../assets/blue/progress_bar.png';
+import blueSettings from '../assets/blue/settings.png';
 
 const THEME_ASSETS = {
   pink: {
@@ -67,7 +80,11 @@ const THEME_ASSETS = {
     minimizerButton: pinkMinimizerButton,
     windowButton: pinkWindowButton,
     favicon: pinkFavicon,
-    ...SHARED_ANIMATIONS,
+    progressBar: pinkProgressBar,
+    settings: pinkSettings,
+    ...SHARED_RECORD_FRAMES,
+    needlePlayFrames: [pinkNeedlePlay1, pinkNeedlePlay2, pinkNeedlePlay3],
+    needleChangeFrames: [pinkNeedleChange1, pinkNeedleChange2, pinkNeedleChange3],
   },
   blue: {
     frame: blueFrame,
@@ -83,7 +100,11 @@ const THEME_ASSETS = {
     minimizerButton: blueMinimizerButton,
     windowButton: blueWindowButton,
     favicon: blueFavicon,
-    ...SHARED_ANIMATIONS,
+    progressBar: blueProgressBar,
+    settings: blueSettings,
+    ...SHARED_RECORD_FRAMES,
+    needlePlayFrames: [blueNeedlePlay1, blueNeedlePlay2, blueNeedlePlay3],
+    needleChangeFrames: [blueNeedleChange1, blueNeedleChange2, blueNeedleChange3],
   },
 };
 

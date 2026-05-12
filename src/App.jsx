@@ -1,9 +1,11 @@
 import { useCallback, useRef, useEffect, useState } from 'react';
 import './App.css';
 import useAudioPlayer from './useAudioPlayer';
+import useSpotifyPlayer from './useSpotifyPlayer';
 import useTheme from './useTheme';
+import { login, handleCallback, isLoggedIn, logout } from './spotify/auth.js';
+import { parsePlaylistUrl, fetchPlaylistTracks } from './spotify/api.js';
 
-import progressBar from '../assets/progress_bar.png';
 import progressBarStars from '../assets/progress_bar_stars.png';
 import star from '../assets/star.png';
 import starSelected from '../assets/star_selected.png';
@@ -66,6 +68,18 @@ function MarqueeText({ className, text }) {
 }
 
 export default function App() {
+  // ── Source state ─────────────────────────────────────────
+  const [source, setSource] = useState('local');
+  const [spotifyConnected, setSpotifyConnected] = useState(isLoggedIn());
+  const [spotifyTracks, setSpotifyTracks] = useState([]);
+  const [playlistUrl, setPlaylistUrl] = useState('');
+  const [loadingPlaylist, setLoadingPlaylist] = useState(false);
+  const [spotifyError, setSpotifyError] = useState(null);
+
+  const local = useAudioPlayer();
+  const spotify = useSpotifyPlayer(spotifyTracks);
+  const player = source === 'spotify' ? spotify : local;
+
   const {
     track,
     isPlaying,
@@ -76,7 +90,47 @@ export default function App() {
     next,
     prev,
     seek,
-  } = useAudioPlayer();
+  } = player;
+
+  // ── Handle OAuth callback on mount ──────────────────────
+  useEffect(() => {
+    async function checkCallback() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('code')) {
+        try {
+          await handleCallback();
+          setSpotifyConnected(true);
+        } catch (err) {
+          setSpotifyError(err.message);
+        }
+      }
+    }
+    checkCallback();
+  }, []);
+
+  // ── Spotify playlist loading ────────────────────────────
+  const loadSpotifyPlaylist = useCallback(async () => {
+    const id = parsePlaylistUrl(playlistUrl);
+    if (!id) {
+      setSpotifyError('Invalid Spotify playlist URL');
+      return;
+    }
+    setLoadingPlaylist(true);
+    setSpotifyError(null);
+    try {
+      const tracks = await fetchPlaylistTracks(id);
+      if (tracks.length === 0) {
+        setSpotifyError('Playlist is empty');
+        return;
+      }
+      setSpotifyTracks(tracks);
+      setSource('spotify');
+    } catch (err) {
+      setSpotifyError(err.message);
+    } finally {
+      setLoadingPlaylist(false);
+    }
+  }, [playlistUrl]);
 
   const { theme, toggleTheme, assets } = useTheme();
 
@@ -86,6 +140,7 @@ export default function App() {
   const [swapping, setSwapping] = useState(false);
   const [needleLifted, setNeedleLifted] = useState(false);
   const [starHovered, setStarHovered] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [hoverProgress, setHoverProgress] = useState(null);
   const seekRef = useRef(null);
@@ -164,7 +219,7 @@ export default function App() {
   const resizeBR = useResize('bottom-right');
 
   return (
-    <div className="player">
+    <div className={`player ${theme === 'blue' ? 'theme-blue' : ''}`}>
       {/* Base frame */}
       <img src={assets.frame} className="layer" alt="" draggable={false} />
 
@@ -201,7 +256,7 @@ export default function App() {
       <img src={assets.plant} className="layer layer-ui" alt="" draggable={false} />
 
       {/* Progress bar layers */}
-      <img src={progressBar} className="layer layer-ui" alt="" draggable={false} />
+      <img src={assets.progressBar} className="layer layer-ui" alt="" draggable={false} />
       <img
         src={progressBarStars}
         className="layer layer-ui"
@@ -230,6 +285,9 @@ export default function App() {
       <img src={assets.minimizerButton} className="layer layer-ui" alt="" draggable={false} />
       <img src={assets.windowButton} className="layer layer-ui" alt="" draggable={false} />
       <img src={assets.exitButton} className="layer layer-ui" alt="" draggable={false} />
+
+      {/* Settings button layer */}
+      <img src={assets.settings} className="layer layer-ui settings-layer" alt="" draggable={false} />
 
       {/* SVG clip-path for pixel-art album mask */}
       <svg width="0" height="0" style={{ position: 'absolute' }}>
@@ -307,8 +365,71 @@ export default function App() {
       <div className="btn btn-window" onClick={() => window.cupid?.maximize()} />
       <div className="btn btn-exit" onClick={() => window.cupid?.close()} />
 
-      {/* Theme toggle */}
-      <div className="btn btn-theme" onClick={toggleTheme} title={`Switch to ${theme === 'pink' ? 'blue' : 'pink'}`} />
+      {/* Settings button */}
+      <div className="btn btn-settings" onClick={() => setShowSettings((v) => !v)} />
+
+      {/* Settings panel */}
+      {showSettings && (
+        <div className="settings-panel">
+          <div className="settings-panel-inner">
+            <div className="settings-label">theme</div>
+            <div className="settings-theme-row">
+              <button
+                className={`settings-theme-btn ${theme === 'pink' ? 'active' : ''}`}
+                onClick={() => { if (theme !== 'pink') toggleTheme(); }}
+              >
+                pink
+              </button>
+              <button
+                className={`settings-theme-btn ${theme === 'blue' ? 'active' : ''}`}
+                onClick={() => { if (theme !== 'blue') toggleTheme(); }}
+              >
+                blue
+              </button>
+            </div>
+            <div className="settings-label">spotify</div>
+            {!spotifyConnected ? (
+              <button className="settings-theme-btn" onClick={() => login()}>
+                log in
+              </button>
+            ) : (
+              <>
+                <input
+                  className="settings-input"
+                  type="text"
+                  placeholder="paste playlist url..."
+                  value={playlistUrl}
+                  onChange={(e) => setPlaylistUrl(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && loadSpotifyPlaylist()}
+                />
+                <div className="settings-theme-row">
+                  <button
+                    className="settings-theme-btn"
+                    onClick={loadSpotifyPlaylist}
+                    disabled={loadingPlaylist}
+                  >
+                    {loadingPlaylist ? '...' : 'load'}
+                  </button>
+                  {source === 'spotify' && (
+                    <button className="settings-theme-btn" onClick={() => setSource('local')}>
+                      local
+                    </button>
+                  )}
+                  <button className="settings-theme-btn" onClick={() => {
+                    logout();
+                    setSpotifyConnected(false);
+                    setSpotifyTracks([]);
+                    if (source === 'spotify') setSource('local');
+                  }}>
+                    logout
+                  </button>
+                </div>
+                {spotifyError && <div className="settings-error">{spotifyError}</div>}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
