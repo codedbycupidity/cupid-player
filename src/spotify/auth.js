@@ -143,17 +143,26 @@ function storeTokens({ access_token, refresh_token, expires_in }) {
  * Get a valid access token, refreshing if necessary.
  */
 export async function getAccessToken() {
+  const token = localStorage.getItem(TOKEN_KEY);
   const expiry = Number(localStorage.getItem(EXPIRY_KEY) || '0');
-  if (Date.now() < expiry - 60_000) {
-    return localStorage.getItem(TOKEN_KEY);
+
+  // Token still valid
+  if (token && Date.now() < expiry - 60_000) {
+    return token;
   }
-  return refreshAccessToken();
+
+  // Try to refresh
+  const refreshed = await refreshAccessToken();
+  if (refreshed) return refreshed;
+
+  // No refresh token but we have a token — use it anyway (may be expired)
+  return token || null;
 }
 
 async function refreshAccessToken() {
   const refreshToken = localStorage.getItem(REFRESH_KEY);
   if (!refreshToken) {
-    throw new Error('No refresh token — please log in again.');
+    return null;
   }
 
   const body = new URLSearchParams({
@@ -170,7 +179,7 @@ async function refreshAccessToken() {
 
   if (!response.ok) {
     logout();
-    throw new Error('Session expired — please log in again.');
+    return null;
   }
 
   const data = await response.json();
