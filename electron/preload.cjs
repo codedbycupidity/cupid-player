@@ -8,4 +8,5 @@ contextBridge.exposeInMainWorld('cupid', {
   resize: (data) => ipcRenderer.send('window-resize', data),
   openExternal: (url) => ipcRenderer.send('open-external', url),
   setTheme: (theme) => ipcRenderer.send('set-theme', theme),
+  getStreamUrl: (title, artist) => ipcRenderer.invoke('get-stream-url', title, artist),
 });
