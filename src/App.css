@@ -121,7 +121,7 @@
 .settings-panel {
   position: absolute;
   top: calc((70 - 23) / 306 * 100vw);
-  right: calc((526 - 400 - 110) / 306 * 100vw);
+  right: calc(5 / 306 * 100vw);
   z-index: 300;
   -webkit-app-region: no-drag;
   pointer-events: auto;
@@ -131,11 +131,12 @@
   background: var(--color-primary);
   border: calc(2 / 306 * 100vw) solid var(--color-secondary);
   border-radius: calc(4 / 306 * 100vw);
-  padding: calc(8 / 306 * 100vw);
-  min-width: calc(100 / 306 * 100vw);
+  padding: calc(6 / 306 * 100vw);
+  width: calc(140 / 306 * 100vw);
+  max-height: calc(140 / 306 * 100vw);
   display: flex;
   flex-direction: column;
-  gap: calc(5 / 306 * 100vw);
+  gap: calc(4 / 306 * 100vw);
 }
 
 .settings-label {
@@ -175,6 +176,45 @@
   color: var(--color-panel-text);
   padding: calc(3 / 306 * 100vw) calc(4 / 306 * 100vw);
   outline: none;
+}
+
+.settings-playlist-list {
+  max-height: calc(70 / 306 * 100vw);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 / 306 * 100vw);
+  scrollbar-width: none;
+}
+
+.settings-playlist-list::-webkit-scrollbar {
+  display: none;
+}
+
+.settings-playlist-item {
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(12 / 306 * 100vw);
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  border-radius: calc(2 / 306 * 100vw);
+  color: var(--color-panel-text);
+  padding: calc(10 / 306 * 100vw) calc(6 / 306 * 100vw);
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settings-playlist-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.settings-playlist-item.disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .settings-error {

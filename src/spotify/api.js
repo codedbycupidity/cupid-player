@@ -90,6 +90,43 @@ export async function fetchPlaylistTracks(playlistId) {
 }
 
 /**
+ * Fetch the current user's playlists.
+ *
+ * @returns {Promise<Array<{ id: string, name: string, image: string|null, trackCount: number }>>}
+ */
+export async function fetchMyPlaylists() {
+  const token = await getAccessToken();
+  if (!token) throw new Error('Not authenticated with Spotify');
+
+  const playlists = [];
+  let url = `${API_BASE}/me/playlists?limit=50`;
+
+  while (url) {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Spotify API error ${res.status}: ${text}`);
+    }
+
+    const data = await res.json();
+    for (const p of data.items) {
+      playlists.push({
+        id: p.id,
+        name: p.name,
+        image: p.images?.[0]?.url ?? null,
+        trackCount: p.tracks?.total ?? 0,
+      });
+    }
+    url = data.next;
+  }
+
+  return playlists;
+}
+
+/**
  * Fetch basic playlist metadata (name, image).
  *
  * @param {string} playlistId
