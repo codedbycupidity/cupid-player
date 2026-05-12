@@ -107,20 +107,20 @@ function createWindow() {
           webPreferences: { nodeIntegration: false, contextIsolation: true },
         });
         authWin.loadURL(url);
-        authWin.webContents.on('will-redirect', (event, redirectUrl) => {
-          if (redirectUrl.startsWith('http://127.0.0.1:5173/callback')) {
+        const handleAuthRedirect = (event, callbackUrl) => {
+          if (callbackUrl.startsWith('http://127.0.0.1:5173/callback')) {
             event.preventDefault();
-            win.loadURL(redirectUrl);
+            // Extract query params and load via the dev server URL
+            const url = new URL(callbackUrl);
+            const devUrl = isDev
+              ? `http://127.0.0.1:5173/${url.search}`
+              : callbackUrl;
+            win.loadURL(devUrl);
             authWin.close();
           }
-        });
-        authWin.webContents.on('will-navigate', (event, navUrl) => {
-          if (navUrl.startsWith('http://127.0.0.1:5173/callback')) {
-            event.preventDefault();
-            win.loadURL(navUrl);
-            authWin.close();
-          }
-        });
+        };
+        authWin.webContents.on('will-redirect', handleAuthRedirect);
+        authWin.webContents.on('will-navigate', handleAuthRedirect);
         return;
       }
       shell.openExternal(url);
@@ -133,6 +133,15 @@ function createWindow() {
   ipcMain.on('window-resize', onResize);
   ipcMain.on('open-external', onOpenExternal);
 
+  const onSetTheme = (_e, theme) => {
+    const iconPath = path.join(__dirname, '..', 'assets', theme, 'favicon.png');
+    if (process.platform === 'darwin' && app.dock) {
+      app.dock.setIcon(iconPath);
+    }
+    win.setIcon(iconPath);
+  };
+  ipcMain.on('set-theme', onSetTheme);
+
   // Clean up IPC listeners when window is destroyed
   win.on('closed', () => {
     ipcMain.removeListener('window-minimize', onMinimize);
@@ -140,10 +149,11 @@ function createWindow() {
     ipcMain.removeListener('window-close', onClose);
     ipcMain.removeListener('window-resize', onResize);
     ipcMain.removeListener('open-external', onOpenExternal);
+    ipcMain.removeListener('set-theme', onSetTheme);
   });
 
   if (isDev) {
-    win.loadURL('http://localhost:5173');
+    win.loadURL('http://127.0.0.1:5173');
     win.webContents.openDevTools({ mode: 'detach' });
   } else {
     win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));

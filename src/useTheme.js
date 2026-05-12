@@ -135,6 +135,7 @@ export default function useTheme() {
       } catch {
         // ignore
       }
+      window.cupid?.setTheme(next);
       return next;
     });
   }, []);
