@@ -136,7 +136,7 @@ export default function App() {
 
   const [recordFrame, setRecordFrame] = useState(0);
   const [needleFrame, setNeedleFrame] = useState(0);
-  const [isPink, setIsPink] = useState(true);
+  const [isPink, setIsPink] = useState(theme === 'pink');
   const [swapping, setSwapping] = useState(false);
   const [needleLifted, setNeedleLifted] = useState(false);
   const [starHovered, setStarHovered] = useState(false);
