@@ -59,10 +59,16 @@ cp -r "out/mac-arm64/Cupid Player.app" /Applications/
 
 > Note: The macOS build is unsigned. On first launch you may need to right-click > Open, or go to System Settings > Privacy & Security to allow it.
 
-## Tech
+## Tech Stack
 
-- Electron + Vite + React
-- yt-dlp for audio streaming
-- Spotify Web API for playlists and metadata
-- Apple MusicKit JS for library access
-- CSS custom properties for theme switching
+- **Electron** — desktop app shell (frameless window, IPC, system tray)
+- **Vite** — build tool and dev server
+- **React** — UI framework
+- **HTML5 Audio** — local MP3 playback
+- **yt-dlp** — YouTube audio streaming for Spotify/Apple Music tracks
+- **Spotify Web API** — playlist and metadata fetching (OAuth PKCE)
+- **Apple MusicKit JS** — library playlist access (JWT auth)
+- **CSS** — custom properties for theming, calc-based responsive scaling
+- **Node.js** — main process (JWT generation, yt-dlp execution)
+- **jsonwebtoken** — Apple Music developer token generation
+- **music-metadata** — MP3 ID3 tag extraction (title, artist, album art)
