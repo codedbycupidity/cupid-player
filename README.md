@@ -58,7 +58,7 @@ The built app will be in `out/mac-arm64/Cupid Player.app` (macOS) or `out/` for 
 cp -r "out/mac-arm64/Cupid Player.app" /Applications/
 ```
 
-**Windows:** Run the installer from `out/Cupid Player Setup.exe`.
+**Windows:** Run the installer from `out/Cupid Player Setup.exe`. If `npm run package` fails at the NSIS step with "Cannot create symbolic link," enable **Developer Mode** in Settings → System → For developers, then re-run. The unpacked app at `out/win-unpacked/Cupid Player.exe` is fully runnable in the meantime — no installer required.
 
 **Linux:** Run the AppImage from `out/`.
 
