@@ -2,6 +2,11 @@
 
 A pixel-art desktop music player built with Electron, Vite, and React.
 
+<p>
+  <img src="assets/snapshots/pink_snapshot.png" alt="Pink theme" width="48%">
+  <img src="assets/snapshots/blue_snapshot.png" alt="Blue theme" width="48%">
+</p>
+
 ## Features
 
 - Pixel-art UI with animated record player, spinning vinyl, and needle
