@@ -16,6 +16,10 @@ import pinkWindowButton from '../assets/pink/window_button.png';
 import pinkFavicon from '../assets/pink/favicon.png';
 import pinkProgressBar from '../assets/pink/progress_bar.png';
 import pinkSettings from '../assets/pink/settings.png';
+import pinkVolumeButton from '../assets/pink/volume_button.png';
+import pinkMuteButton from '../assets/pink/mute_button.png';
+import pinkShuffleButton from '../assets/pink/shuffle_button.png';
+import pinkRepeatButton from '../assets/pink/repeat_button.png';
 
 // ── Shared record animations ────────────────────────────
 import recordA1 from '../assets/animations/record-pink/frame-1.png';
@@ -64,6 +68,10 @@ import blueWindowButton from '../assets/blue/window_button.png';
 import blueFavicon from '../assets/blue/favicon.png';
 import blueProgressBar from '../assets/blue/progress_bar.png';
 import blueSettings from '../assets/blue/settings.png';
+import blueVolumeButton from '../assets/blue/volume_button.png';
+import blueMuteButton from '../assets/blue/mute_button.png';
+import blueShuffleButton from '../assets/blue/shuffle_button.png';
+import blueRepeatButton from '../assets/blue/repeat_button.png';
 
 const THEME_ASSETS = {
   pink: {
@@ -82,6 +90,10 @@ const THEME_ASSETS = {
     favicon: pinkFavicon,
     progressBar: pinkProgressBar,
     settings: pinkSettings,
+    volumeButton: pinkVolumeButton,
+    muteButton: pinkMuteButton,
+    shuffleButton: pinkShuffleButton,
+    repeatButton: pinkRepeatButton,
     ...SHARED_RECORD_FRAMES,
     needlePlayFrames: [pinkNeedlePlay1, pinkNeedlePlay2, pinkNeedlePlay3],
     needleChangeFrames: [pinkNeedleChange1, pinkNeedleChange2, pinkNeedleChange3],
@@ -102,6 +114,10 @@ const THEME_ASSETS = {
     favicon: blueFavicon,
     progressBar: blueProgressBar,
     settings: blueSettings,
+    volumeButton: blueVolumeButton,
+    muteButton: blueMuteButton,
+    shuffleButton: blueShuffleButton,
+    repeatButton: blueRepeatButton,
     ...SHARED_RECORD_FRAMES,
     needlePlayFrames: [blueNeedlePlay1, blueNeedlePlay2, blueNeedlePlay3],
     needleChangeFrames: [blueNeedleChange1, blueNeedleChange2, blueNeedleChange3],
