@@ -83,7 +83,7 @@ export default function App() {
   const [musicService, setMusicService] = useState('spotify');
   const [playMode, setPlayMode] = useState('normal'); // 'normal' | 'shuffle' | 'repeat'
   const [volumeHovered, setVolumeHovered] = useState(false);
-  const [showDebug, setShowDebug] = useState(true);
+  const [showDebug, setShowDebug] = useState(false);
 
   const local = useAudioPlayer(playMode);
   const streaming = useSpotifyPlayer(streamTracks, playMode);
