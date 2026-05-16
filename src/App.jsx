@@ -83,7 +83,9 @@ export default function App() {
   const [musicService, setMusicService] = useState('spotify');
   const [playMode, setPlayMode] = useState('normal'); // 'normal' | 'shuffle' | 'repeat'
   const [volumeHovered, setVolumeHovered] = useState(false);
-  const [showDebug, setShowDebug] = useState(false);
+  const [volumeDragging, setVolumeDragging] = useState(false);
+  const volumeBarRef = useRef(null);
+  const [showDebug] = useState(false);
 
   const local = useAudioPlayer(playMode);
   const streaming = useSpotifyPlayer(streamTracks, playMode);
@@ -203,6 +205,23 @@ export default function App() {
       window.removeEventListener('mouseup', onMouseUp);
     };
   }, [dragging, seek]);
+
+  useEffect(() => {
+    if (!volumeDragging) return;
+    const onMouseMove = (e) => {
+      if (!volumeBarRef.current) return;
+      const rect = volumeBarRef.current.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      setVolume(pct);
+    };
+    const onMouseUp = () => setVolumeDragging(false);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [volumeDragging, setVolume]);
   const [needleChangeFrame, setNeedleChangeFrame] = useState(0);
   const prevTrackRef = useRef(track.title);
 
@@ -421,40 +440,43 @@ export default function App() {
       {/* Volume bar layers — shown on hover */}
       {volumeHovered && (
         <>
-          <img src={assets.volumeBarLow} className="layer layer-ui" alt="" draggable={false} style={{ opacity: 0.8 }} />
+          <img src={assets.volumeBarLow} className="layer layer-ui" alt="" draggable={false} />
           <img
             src={assets.volumeBarHigh}
             className="layer layer-ui"
             alt=""
             draggable={false}
             style={{
-              opacity: 0.8,
-              clipPath: `inset(0 ${(1 - (muted ? 0 : volume)) * 100}% 0 0)`,
+              clipPath: `inset(0 ${((1 - (muted ? 0 : volume)) * (262 - 154) / 512 + (512 - 262) / 512) * 100}% 0 0)`,
             }}
           />
         </>
       )}
 
-      {/* Volume button click target */}
+      {/* Volume icon — hover to reveal bar */}
       <div
-        className="btn btn-volume-icon"
-        onClick={toggleMute}
-        onMouseEnter={() => setVolumeHovered(true)}
+        className={`volume-hover-zone ${volumeHovered ? 'expanded' : ''}`}
         onMouseLeave={() => setVolumeHovered(false)}
-      />
-
-      {/* Volume bar seek area — shown on hover */}
-      <div
-        className="volume-bar-area"
-        onMouseEnter={() => setVolumeHovered(true)}
-        onMouseLeave={() => setVolumeHovered(false)}
-        onMouseDown={(e) => {
-          e.preventDefault();
-          const rect = e.currentTarget.getBoundingClientRect();
-          const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-          setVolume(pct);
-        }}
-      />
+      >
+        <div
+          className="btn-volume-icon"
+          onClick={toggleMute}
+          onMouseEnter={() => setVolumeHovered(true)}
+        />
+        {volumeHovered && (
+          <div
+            className="volume-bar-area"
+            ref={volumeBarRef}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setVolumeDragging(true);
+              const rect = e.currentTarget.getBoundingClientRect();
+              const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+              setVolume(pct);
+            }}
+          />
+        )}
+      </div>
 
       {/* Shuffle/repeat click target */}
       <div className="btn btn-playmode" onClick={cyclePlayMode} />
@@ -473,7 +495,8 @@ export default function App() {
           <div className="debug-overlay btn btn-prev" />
           <div className="debug-overlay btn btn-play" />
           <div className="debug-overlay btn btn-next" />
-          <div className="debug-overlay btn btn-volume-icon" />
+          <div className="debug-overlay volume-hover-zone" />
+          <div className="debug-overlay volume-bar-area-debug" />
           <div className="debug-overlay btn btn-playmode" />
         </>
       )}
