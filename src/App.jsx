@@ -211,10 +211,13 @@ export default function App() {
     const onMouseMove = (e) => {
       if (!volumeBarRef.current) return;
       const rect = volumeBarRef.current.getBoundingClientRect();
-      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const pct = Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height));
       setVolume(pct);
     };
-    const onMouseUp = () => setVolumeDragging(false);
+    const onMouseUp = () => {
+      setVolumeDragging(false);
+      setVolumeHovered(false);
+    };
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
     return () => {
@@ -437,17 +440,17 @@ export default function App() {
       <div className="btn btn-play" onClick={togglePlay} />
       <div className="btn btn-next" onClick={next} />
 
-      {/* Volume bar layers — shown on hover */}
-      {volumeHovered && (
+      {/* Volume bar layers — shown on hover or drag */}
+      {(volumeHovered || volumeDragging) && (
         <>
-          <img src={assets.volumeBarLow} className="layer layer-ui" alt="" draggable={false} />
+          <img src={assets.volumeBarLow} className="layer layer-ui volume-bar-layer" alt="" draggable={false} />
           <img
             src={assets.volumeBarHigh}
-            className="layer layer-ui"
+            className="layer layer-ui volume-bar-layer"
             alt=""
             draggable={false}
             style={{
-              clipPath: `inset(0 ${((1 - (muted ? 0 : volume)) * (262 - 154) / 512 + (512 - 262) / 512) * 100}% 0 0)`,
+              clipPath: `inset(${((1 - (muted ? 0 : volume)) * (420 - 338) / 512 + 338 / 512) * 100}% 0 0 0)`,
             }}
           />
         </>
@@ -455,15 +458,15 @@ export default function App() {
 
       {/* Volume icon — hover to reveal bar */}
       <div
-        className={`volume-hover-zone ${volumeHovered ? 'expanded' : ''}`}
-        onMouseLeave={() => setVolumeHovered(false)}
+        className={`volume-hover-zone ${(volumeHovered || volumeDragging) ? 'expanded' : ''}`}
+        onMouseLeave={() => { if (!volumeDragging) setVolumeHovered(false); }}
       >
         <div
           className="btn-volume-icon"
           onClick={toggleMute}
           onMouseEnter={() => setVolumeHovered(true)}
         />
-        {volumeHovered && (
+        {(volumeHovered || volumeDragging) && (
           <div
             className="volume-bar-area"
             ref={volumeBarRef}
@@ -471,7 +474,7 @@ export default function App() {
               e.preventDefault();
               setVolumeDragging(true);
               const rect = e.currentTarget.getBoundingClientRect();
-              const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+              const pct = Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height));
               setVolume(pct);
             }}
           />
@@ -479,7 +482,7 @@ export default function App() {
       </div>
 
       {/* Shuffle/repeat click target */}
-      <div className="btn btn-playmode" onClick={cyclePlayMode} />
+      <div className="btn btn-playmode" onClick={cyclePlayMode} title={playMode} />
 
       {/* Window control click targets */}
       <div className="btn btn-minimize" onClick={() => window.cupid?.minimize()} />
