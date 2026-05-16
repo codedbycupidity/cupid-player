@@ -225,6 +225,104 @@
   color: #ff6b6b;
 }
 
+/* Volume button area — contains icon + hover dial */
+.btn-volume-area {
+  position: absolute;
+  left: calc((130 - 110) / 306 * 100vw);
+  top: calc((415 - 23) / 306 * 100vw);
+  width: calc(80 / 306 * 100vw);
+  height: calc(20 / 306 * 100vw);
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  -webkit-app-region: no-drag;
+  cursor: default;
+}
+
+.btn-volume-icon {
+  width: calc(20 / 306 * 100vw);
+  height: calc(20 / 306 * 100vw);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.volume-dial {
+  display: flex;
+  align-items: center;
+  margin-left: calc(2 / 306 * 100vw);
+  height: 100%;
+}
+
+.volume-dial input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: calc(55 / 306 * 100vw);
+  height: calc(3 / 306 * 100vw);
+  background: #F4CDC3;
+  border-radius: 0;
+  outline: none;
+  cursor: pointer;
+  image-rendering: pixelated;
+}
+
+.volume-dial input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: calc(6 / 306 * 100vw);
+  height: calc(8 / 306 * 100vw);
+  background: #BD6170;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.volume-dial input[type="range"]::-webkit-slider-runnable-track {
+  background: linear-gradient(to right, #BD6170 0%, #F4CDC3 100%);
+  height: calc(3 / 306 * 100vw);
+}
+
+/* Blue theme volume dial colors */
+.player.theme-blue .volume-dial input[type="range"] {
+  background: #C3CDF4;
+}
+
+.player.theme-blue .volume-dial input[type="range"]::-webkit-slider-thumb {
+  background: #37647E;
+}
+
+.player.theme-blue .volume-dial input[type="range"]::-webkit-slider-runnable-track {
+  background: linear-gradient(to right, #37647E 0%, #C3CDF4 100%);
+}
+
+/* Shuffle/repeat click target */
+.btn-playmode {
+  position: absolute;
+  left: calc((355 - 110) / 306 * 100vw);
+  top: calc((415 - 23) / 306 * 100vw);
+  width: calc(25 / 306 * 100vw);
+  height: calc(20 / 306 * 100vw);
+  z-index: 150;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+/* Debug overlay for positioning */
+.debug-overlay {
+  background: rgba(255, 0, 0, 0.25);
+  border: 1px solid rgba(255, 0, 0, 0.6);
+  pointer-events: none;
+  z-index: 999;
+}
+
+.btn-volume-icon-debug {
+  position: absolute;
+  left: calc((130 - 110) / 306 * 100vw);
+  top: calc((415 - 23) / 306 * 100vw);
+  width: calc(20 / 306 * 100vw);
+  height: calc(20 / 306 * 100vw);
+  z-index: 999;
+}
+
 /* Progress bar seek target */
 .progress-seek {
   position: absolute;
