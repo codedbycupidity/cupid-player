@@ -228,15 +228,19 @@
 /* Volume button area — contains icon + hover dial */
 .btn-volume-area {
   position: absolute;
-  left: calc((130 - 110) / 306 * 100vw);
-  top: calc((415 - 23) / 306 * 100vw);
-  width: calc(80 / 306 * 100vw);
+  left: calc((144 - 110) / 306 * 100vw);
+  top: calc((425 - 23) / 306 * 100vw);
+  width: calc(20 / 306 * 100vw);
   height: calc(20 / 306 * 100vw);
-  z-index: 150;
+  z-index: 155;
   display: flex;
   align-items: center;
   -webkit-app-region: no-drag;
   cursor: default;
+}
+
+.btn-volume-area:hover {
+  width: calc(95 / 306 * 100vw);
 }
 
 .btn-volume-icon {
@@ -247,16 +251,20 @@
 }
 
 .volume-dial {
+  position: absolute;
+  left: calc(22 / 306 * 100vw);
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
-  margin-left: calc(2 / 306 * 100vw);
-  height: 100%;
+  height: calc(20 / 306 * 100vw);
+  z-index: 160;
 }
 
 .volume-dial input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
-  width: calc(55 / 306 * 100vw);
+  width: calc(70 / 306 * 100vw);
   height: calc(3 / 306 * 100vw);
   background: #F4CDC3;
   border-radius: 0;
@@ -297,8 +305,8 @@
 /* Shuffle/repeat click target */
 .btn-playmode {
   position: absolute;
-  left: calc((355 - 110) / 306 * 100vw);
-  top: calc((415 - 23) / 306 * 100vw);
+  left: calc((362 - 110) / 306 * 100vw);
+  top: calc((424 - 23) / 306 * 100vw);
   width: calc(25 / 306 * 100vw);
   height: calc(20 / 306 * 100vw);
   z-index: 150;
@@ -316,8 +324,8 @@
 
 .btn-volume-icon-debug {
   position: absolute;
-  left: calc((130 - 110) / 306 * 100vw);
-  top: calc((415 - 23) / 306 * 100vw);
+  left: calc((144 - 110) / 306 * 100vw);
+  top: calc((425 - 23) / 306 * 100vw);
   width: calc(20 / 306 * 100vw);
   height: calc(20 / 306 * 100vw);
   z-index: 999;
@@ -338,23 +346,23 @@
 
 /* Playback control click targets */
 .btn-prev {
-  left: calc((167 - 110) / 306 * 100vw);
+  left: calc((172 - 110) / 306 * 100vw);
   top: calc((418 - 23) / 306 * 100vw);
-  width: calc(42 / 306 * 100vw);
+  width: calc(44 / 306 * 100vw);
   height: calc(31 / 306 * 100vw);
 }
 
 .btn-play {
-  left: calc((239 - 110) / 306 * 100vw);
+  left: calc((240 - 110) / 306 * 100vw);
   top: calc((418 - 23) / 306 * 100vw);
-  width: calc(43 / 306 * 100vw);
+  width: calc(44 / 306 * 100vw);
   height: calc(31 / 306 * 100vw);
 }
 
 .btn-next {
-  left: calc((312 - 110) / 306 * 100vw);
+  left: calc((310 - 110) / 306 * 100vw);
   top: calc((418 - 23) / 306 * 100vw);
-  width: calc(42 / 306 * 100vw);
+  width: calc(44 / 306 * 100vw);
   height: calc(31 / 306 * 100vw);
 }
 
