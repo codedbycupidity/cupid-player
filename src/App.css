@@ -225,81 +225,28 @@
   color: #ff6b6b;
 }
 
-/* Volume button area — contains icon + hover dial */
-.btn-volume-area {
+/* Volume button click target */
+.btn-volume-icon {
   position: absolute;
   left: calc((144 - 110) / 306 * 100vw);
   top: calc((425 - 23) / 306 * 100vw);
   width: calc(20 / 306 * 100vw);
   height: calc(20 / 306 * 100vw);
   z-index: 155;
-  display: flex;
-  align-items: center;
+  cursor: pointer;
   -webkit-app-region: no-drag;
-  cursor: default;
 }
 
-.btn-volume-area:hover {
-  width: calc(95 / 306 * 100vw);
-}
-
-.btn-volume-icon {
-  width: calc(20 / 306 * 100vw);
-  height: calc(20 / 306 * 100vw);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.volume-dial {
+/* Volume bar seek area — invisible overlay on the bar asset */
+.volume-bar-area {
   position: absolute;
-  left: calc(22 / 306 * 100vw);
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  height: calc(20 / 306 * 100vw);
-  z-index: 160;
-}
-
-.volume-dial input[type="range"] {
-  -webkit-appearance: none;
-  appearance: none;
-  width: calc(70 / 306 * 100vw);
-  height: calc(3 / 306 * 100vw);
-  background: #F4CDC3;
-  border-radius: 0;
-  outline: none;
+  left: calc((165 - 110) / 306 * 100vw);
+  top: calc((440 - 23) / 306 * 100vw);
+  width: calc(100 / 306 * 100vw);
+  height: calc(12 / 306 * 100vw);
+  z-index: 155;
   cursor: pointer;
-  image-rendering: pixelated;
-}
-
-.volume-dial input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: calc(6 / 306 * 100vw);
-  height: calc(8 / 306 * 100vw);
-  background: #BD6170;
-  border: none;
-  border-radius: 0;
-  cursor: pointer;
-}
-
-.volume-dial input[type="range"]::-webkit-slider-runnable-track {
-  background: linear-gradient(to right, #BD6170 0%, #F4CDC3 100%);
-  height: calc(3 / 306 * 100vw);
-}
-
-/* Blue theme volume dial colors */
-.player.theme-blue .volume-dial input[type="range"] {
-  background: #C3CDF4;
-}
-
-.player.theme-blue .volume-dial input[type="range"]::-webkit-slider-thumb {
-  background: #37647E;
-}
-
-.player.theme-blue .volume-dial input[type="range"]::-webkit-slider-runnable-track {
-  background: linear-gradient(to right, #37647E 0%, #C3CDF4 100%);
+  -webkit-app-region: no-drag;
 }
 
 /* Shuffle/repeat click target */
@@ -322,14 +269,6 @@
   z-index: 999;
 }
 
-.btn-volume-icon-debug {
-  position: absolute;
-  left: calc((144 - 110) / 306 * 100vw);
-  top: calc((425 - 23) / 306 * 100vw);
-  width: calc(20 / 306 * 100vw);
-  height: calc(20 / 306 * 100vw);
-  z-index: 999;
-}
 
 /* Progress bar seek target */
 .progress-seek {

@@ -20,6 +20,8 @@ import pinkVolumeButton from '../assets/pink/volume_button.png';
 import pinkMuteButton from '../assets/pink/mute_button.png';
 import pinkShuffleButton from '../assets/pink/shuffle_button.png';
 import pinkRepeatButton from '../assets/pink/repeat_button.png';
+import pinkVolumeBarHigh from '../assets/pink/volume_bar_high.png';
+import pinkVolumeBarLow from '../assets/pink/volume_bar_low.png';
 
 // ── Shared record animations ────────────────────────────
 import recordA1 from '../assets/animations/record-pink/frame-1.png';
@@ -72,6 +74,8 @@ import blueVolumeButton from '../assets/blue/volume_button.png';
 import blueMuteButton from '../assets/blue/mute_button.png';
 import blueShuffleButton from '../assets/blue/shuffle_button.png';
 import blueRepeatButton from '../assets/blue/repeat_button.png';
+import blueVolumeBarHigh from '../assets/blue/volume_bar_high.png';
+import blueVolumeBarLow from '../assets/blue/volume_bar_low.png';
 
 const THEME_ASSETS = {
   pink: {
@@ -94,6 +98,8 @@ const THEME_ASSETS = {
     muteButton: pinkMuteButton,
     shuffleButton: pinkShuffleButton,
     repeatButton: pinkRepeatButton,
+    volumeBarHigh: pinkVolumeBarHigh,
+    volumeBarLow: pinkVolumeBarLow,
     ...SHARED_RECORD_FRAMES,
     needlePlayFrames: [pinkNeedlePlay1, pinkNeedlePlay2, pinkNeedlePlay3],
     needleChangeFrames: [pinkNeedleChange1, pinkNeedleChange2, pinkNeedleChange3],
@@ -118,6 +124,8 @@ const THEME_ASSETS = {
     muteButton: blueMuteButton,
     shuffleButton: blueShuffleButton,
     repeatButton: blueRepeatButton,
+    volumeBarHigh: blueVolumeBarHigh,
+    volumeBarLow: blueVolumeBarLow,
     ...SHARED_RECORD_FRAMES,
     needlePlayFrames: [blueNeedlePlay1, blueNeedlePlay2, blueNeedlePlay3],
     needleChangeFrames: [blueNeedleChange1, blueNeedleChange2, blueNeedleChange3],

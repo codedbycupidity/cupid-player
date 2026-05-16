@@ -418,26 +418,43 @@ export default function App() {
       <div className="btn btn-play" onClick={togglePlay} />
       <div className="btn btn-next" onClick={next} />
 
-      {/* Volume button + hover dial */}
+      {/* Volume bar layers — shown on hover */}
+      {volumeHovered && (
+        <>
+          <img src={assets.volumeBarLow} className="layer layer-ui" alt="" draggable={false} style={{ opacity: 0.8 }} />
+          <img
+            src={assets.volumeBarHigh}
+            className="layer layer-ui"
+            alt=""
+            draggable={false}
+            style={{
+              opacity: 0.8,
+              clipPath: `inset(0 ${(1 - (muted ? 0 : volume)) * 100}% 0 0)`,
+            }}
+          />
+        </>
+      )}
+
+      {/* Volume button click target */}
       <div
-        className="btn btn-volume-area"
+        className="btn btn-volume-icon"
+        onClick={toggleMute}
         onMouseEnter={() => setVolumeHovered(true)}
         onMouseLeave={() => setVolumeHovered(false)}
-      >
-        <div className="btn-volume-icon" onClick={toggleMute} />
-        {volumeHovered && (
-          <div className="volume-dial">
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={muted ? 0 : volume}
-              onChange={(e) => setVolume(parseFloat(e.target.value))}
-            />
-          </div>
-        )}
-      </div>
+      />
+
+      {/* Volume bar seek area — shown on hover */}
+      <div
+        className="volume-bar-area"
+        onMouseEnter={() => setVolumeHovered(true)}
+        onMouseLeave={() => setVolumeHovered(false)}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          const rect = e.currentTarget.getBoundingClientRect();
+          const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+          setVolume(pct);
+        }}
+      />
 
       {/* Shuffle/repeat click target */}
       <div className="btn btn-playmode" onClick={cyclePlayMode} />
@@ -456,7 +473,7 @@ export default function App() {
           <div className="debug-overlay btn btn-prev" />
           <div className="debug-overlay btn btn-play" />
           <div className="debug-overlay btn btn-next" />
-          <div className="debug-overlay btn-volume-icon-debug" />
+          <div className="debug-overlay btn btn-volume-icon" />
           <div className="debug-overlay btn btn-playmode" />
         </>
       )}
