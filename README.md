@@ -39,9 +39,40 @@ Browse your Apple Music library playlists. Requires an Apple Developer account f
 
 See [APPLE_MUSIC_SETUP.md](APPLE_MUSIC_SETUP.md) for full setup instructions.
 
-## Local Playback
+## Adding Local Audio Files
 
-Drop MP3 files into the `audio/` directory. The player will pick them up automatically with metadata and album art extracted from the files.
+The local playlist is driven by a single file, `playlist.json`, that lives next to your audio files. Drop your songs into the audio folder, list them in the JSON, and the player picks them up.
+
+### Where the audio folder lives
+
+- **Running from source (dev):** `audio/` in the project root.
+- **Installed app (macOS):** `~/Library/Application Support/Cupid Player/audio/`
+- **Installed app (Windows):** `%APPDATA%\Cupid Player\audio\`
+- **Installed app (Linux):** `~/.config/Cupid Player/audio/`
+
+On first launch, the installed app seeds this folder with the bundled defaults. After that it's yours to edit — the app never overwrites it.
+
+### Building your playlist
+
+1. Drop `.mp3` files into the audio folder.
+2. Open `playlist.json` in the same folder and add one entry per song:
+
+   ```json
+   [
+     { "file": "my-song.mp3", "title": "My Song", "artist": "Some Artist", "album": "Album Name", "art": "https://example.com/cover.jpg" },
+     { "file": "another.mp3", "title": "Another Song", "artist": "Someone Else" }
+   ]
+   ```
+
+   - `file` and `title` are required.
+   - `artist`, `album`, and `art` are optional. `art` is a URL to a cover image.
+   - The `file` value must match the mp3 filename exactly (spaces and case included).
+
+3. In the app, hit the settings icon and the local tab is selected by default. Reload the app to pick up new edits — `playlist.json` is read on launch.
+
+### Supported formats
+
+`.mp3`, `.m4a`, `.aac`, `.flac`, `.wav`, `.ogg`, `.opus`.
 
 ## Build
 
