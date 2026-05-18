@@ -29,7 +29,9 @@ npm run dev
 
 ## Spotify Setup
 
-Cupid Player can stream any track from your Spotify playlists. Audio is fetched from YouTube via yt-dlp, so **Spotify Premium is not required**.
+Cupid Player can stream any track from your Spotify playlists. Audio is fetched from YouTube via yt-dlp.
+
+> **Note:** As of February 2026, Spotify requires the developer account that creates the app to have an active Premium subscription ([announcement](https://developer.spotify.com/blog/2026-02-06-update-on-developer-access-and-platform-security)). Without it, the Spotify API returns 403 for all users.
 
 See [SPOTIFY_SETUP.md](SPOTIFY_SETUP.md) for full setup instructions.
 
