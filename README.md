@@ -16,6 +16,7 @@ A pixel-art desktop music player built with Electron, Vite, and React.
 - Pink and blue theme switching with persistent preference
 - Spotify integration — browse your playlists and play tracks via yt-dlp
 - Apple Music integration — browse your library playlists via MusicKit JS
+- YouTube playlists — paste any public playlist URL (no sign-in) or sign in with Google to browse your own
 - Local MP3 playback from the `audio/` directory
 - Custom frameless window with drag and resize
 - Dynamic dock/taskbar icon that matches the active theme
@@ -23,9 +24,11 @@ A pixel-art desktop music player built with Electron, Vite, and React.
 ## Getting Started
 
 ```bash
-npm install
+npm install   # also auto-downloads the yt-dlp binary for your OS into ./bin
 npm run dev
 ```
+
+Requires Node.js 18+. No Python install needed — the postinstall script fetches the standalone yt-dlp binary that powers streaming.
 
 ## Spotify Setup
 
@@ -40,6 +43,14 @@ See [SPOTIFY_SETUP.md](SPOTIFY_SETUP.md) for full setup instructions.
 Browse your Apple Music library playlists. Requires an Apple Developer account for the MusicKit key. **Apple Music subscription is not required for playback.**
 
 See [APPLE_MUSIC_SETUP.md](APPLE_MUSIC_SETUP.md) for full setup instructions.
+
+## YouTube Setup
+
+Two flows: paste any public playlist URL (no sign-in required) or sign in with Google to browse your own playlists. **No YouTube Premium / no subscription required** in either case — and the URL-paste flow needs no setup at all.
+
+The sign-in-with-Google option only appears in the settings panel when `VITE_YOUTUBE_CLIENT_ID` (and `VITE_YOUTUBE_CLIENT_SECRET`) are set in `.env`. Without those, the panel shows the URL-paste box instead — pick whichever flow you want by configuring (or not configuring) your `.env`.
+
+See [YOUTUBE_SETUP.md](YOUTUBE_SETUP.md) for full setup instructions.
 
 ## Adding Local Audio Files
 
@@ -103,9 +114,10 @@ cp -r "out/mac-arm64/Cupid Player.app" /Applications/
 - **Vite** — build tool and dev server
 - **React** — UI framework
 - **HTML5 Audio** — local MP3 playback
-- **yt-dlp** — YouTube audio streaming for Spotify/Apple Music tracks
+- **yt-dlp** — YouTube audio streaming for Spotify/Apple/YouTube tracks; also fetches public YouTube playlist contents via `--flat-playlist`
 - **Spotify Web API** — playlist and metadata fetching (OAuth PKCE)
 - **Apple MusicKit JS** — library playlist access (JWT auth)
+- **YouTube Data API v3** — sign-in browsing of the user's own playlists (Google OAuth PKCE, free quota)
 - **CSS** — custom properties for theming, calc-based responsive scaling
 - **Node.js** — main process (JWT generation, yt-dlp execution)
 - **jsonwebtoken** — Apple Music developer token generation
