@@ -23,12 +23,18 @@ A pixel-art desktop music player built with Electron, Vite, and React.
 
 ## Getting Started
 
+One command sets everything up:
+
 ```bash
-npm install   # also auto-downloads the yt-dlp binary for your OS into ./bin
+npm run setup
 npm run dev
 ```
 
-Requires Node.js 18+. No Python install needed — the postinstall script fetches the standalone yt-dlp binary that powers streaming.
+`npm run setup` installs dependencies, downloads the yt-dlp binary, and automatically checks for and repairs the Electron binary issue that can otherwise break `npm run dev` on Windows — so there's nothing to troubleshoot by hand. If anything was off, just re-run `npm run setup`.
+
+Requires Node.js 18+ (**24.x LTS recommended**). No Python install needed — setup fetches the standalone yt-dlp binary that powers streaming.
+
+> Hitting an Electron `path.txt` / "failed to install correctly" error, or streaming not working? See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) — including the manual Electron binary fix for too-new Node versions.
 
 ## Spotify Setup
 
